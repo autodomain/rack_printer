@@ -797,7 +797,7 @@ module light_guide_single(fiber_d=1.0){
 // Helper coordinate relative LED rispetto al distanziale piu vicino per ciascuna scheda
 function _led_screw_d(b) = (b == "olimex_lime2" || b == "bbb" || b == "bbb_cape") ? 3.2 : (b == "rpipico") ? 2.2 : 2.8;
 function _led_rel_xy(b, idx=0) =
-    (b == "olimex_lime2") ? ((idx == 0) ? [-7.81, -13.59] : [-9.81, -10.09]) :
+    (b == "olimex_lime2") ? ((idx == 0) ? [3.39, -13.59] : [-13.31, -10.09]) :
     (b == "bbb" || b == "bbb_cape") ? ((idx == 0) ? [-10.5, 9.47] : [-3.3, 9.47]) :
     (b == "rpizero") ? [-2.5, 0.5] :
     (b == "rpipico") ? [1.7, 3.0] :
@@ -931,11 +931,11 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
             (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 49.0 - 3.5) + 2.5); // rpi3 / rpi4 / rpi5
     z_led2 = (board_type == "olimex_lime2") ? (z_led - 3.5) : z_led;
 
-    led_x1 = (board_type == "olimex_lime2") ? (x0 + 47.0) :
+    led_x1 = (board_type == "olimex_lime2") ? (x0 + 58.2) :
              (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 36.0) :
              (board_type == "rpizero") ? (x0 + 24.0) :
              (board_type == "rpipico") ? (x0 + 6.5) : (x0 + 3.5);
-    led_x2 = (board_type == "olimex_lime2") ? (x0 + 45.0) :
+    led_x2 = (board_type == "olimex_lime2") ? (x0 + 41.5) :
              (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 43.2) : (x0 + 7.5);
 
     front_x1 = (board_type == "olimex_lime2") ? (x0 + 44.0) :
@@ -2083,9 +2083,9 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
             // Slot MicroSD sul lato inferiore anteriore (sotto Mini-USB OTG, a dx dell'HDMI guardando dal fronte)
             color([0.75, 0.75, 0.75]){ translate([2.5, -1.8, -1.5]){ cube([13, 1.8, 15]); } }
 
-            // LED di stato (PWR_LED Rosso accanto al jack 5V a dx, CHGLED Verde dietro batteria LiPo a sx)
-            color([0.9, 0.1, 0.1]){ translate([47.0, t, 76.0]){ cylinder(d=1.4, h=0.8, $fn=12); } }
-            color([0.1, 0.9, 0.2]){ translate([45.0, t, 72.5]){ cylinder(d=1.4, h=0.8, $fn=12); } }
+            // LED di stato (PWR_LED Rosso a dx del jack 5V, CHGLED Verde dietro batteria LiPo leggermente a sx)
+            color([0.9, 0.1, 0.1]){ translate([58.2, t, 76.0]){ cylinder(d=1.4, h=0.8, $fn=12); } }
+            color([0.1, 0.9, 0.2]){ translate([41.5, t, 72.5]){ cylinder(d=1.4, h=0.8, $fn=12); } }
         }
 
     } else if(board_type == "rpizero"){
