@@ -431,6 +431,9 @@ module go(){
                 if(Enable_Reset_Button){
                     reset_button_3d_mockup(rst_btn_x, rst_btn_y, Reset_Button_Dia);
                 }
+                if(Enable_LED_Guide && Board_Type != "none"){
+                    light_guide_3d_mockup(Board_Type, pi_offset_x, eff_depth, Fiber_Diameter);
+                }
             } else {
                 frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
                 cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
@@ -453,6 +456,9 @@ module go(){
             if(Enable_Reset_Button){
                 reset_button_3d_mockup(rst_btn_x, rst_btn_y, Reset_Button_Dia);
             }
+            if(Enable_LED_Guide && Board_Type != "none"){
+                light_guide_3d_mockup(Board_Type, pi_offset_x, eff_depth, Fiber_Diameter);
+            }
         }
     }else if(Part=="frontplate" || Part=="b" || Part=="FrontPlate"){
         // Pronto per la stampa 3D (piatto sul piano di stampa XY)
@@ -472,7 +478,7 @@ module go(){
     }else if(Part=="handles" || Part=="f" || Part=="Handles"){
         handle(Units, true);
     }else if(Part=="light_guide"){
-        light_guide_bracket(Fiber_Diameter);
+        light_guide_bracket(Fiber_Diameter, Board_Type);
     }else if(Part=="oled_clip"){
         oled_clip_bracket(OLED_Model);
     // --- STRUTTURA DEL RACK (FRAME) ---
@@ -765,31 +771,98 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
 }
 
 
-// Staffa/clip per catturare la luce dai LED SMD della Raspberry Pi con fibra ottica da 1mm
-// Si monta sul distanziale anteriore destro della RPi con la vite M2.5
-module light_guide_bracket(fiber_d=1.0){
-    fh = fiber_d + 0.2; // 1.2mm per fibra da 1.0mm
+// Staffa/convogliatore stampabile (senza supporti) per catturare la luce dai LED SMD con fibra ottica
+// Si fissa sul distanziale anteriore destro della scheda e guida le fibre verso i collarini sul frontale
+module light_guide_bracket(fiber_d=1.0, board_type=Board_Type){
+    fh = fiber_d + 0.2; // Foro con leggero attrito per trattenere la fibra
+    screw_d = (board_type == "olimex_lime2" || board_type == "bbb" || board_type == "bbb_cape") ? 3.2 : 2.8;
+    // Coordinate LED relative al foro di fissaggio anteriore destro ([0,0]), con +Y verso il pannello frontale
+    lx1 = (board_type == "olimex_lime2") ? -6.81 :
+          (board_type == "bbb" || board_type == "bbb_cape") ? -6.0 : -6.5;
+    lx2 = (board_type == "olimex_lime2") ?  0.19 :
+          (board_type == "bbb" || board_type == "bbb_cape") ?  0.0 :  0.5;
+    ly  = (board_type == "olimex_lime2") ?  7.55 :
+          (board_type == "bbb" || board_type == "bbb_cape") ?  5.0 :  1.0;
+
+    min_x = min(0, min(lx1, lx2)) - 3.0;
+    max_x = max(0, max(lx1, lx2)) + 3.0;
+
     difference(){
         union(){
-            // Anello di fissaggio sul distanziale M2.5 della RPi
-            cylinder(d=7, h=3, $fn=30);
-            // Braccetto che sporge verso i LED SMD
-            translate([-3.5, 0, 0]){ cube([7, 14, 3]); }
-            // Blocchetto di alloggiamento punte fibra ottica sopra i LED
-            translate([-3.5, 11, 0]){ cube([7, 6, 6]); }
+            // Anello di fissaggio sul distanziale anteriore destro della scheda
+            cylinder(d=7.5, h=3.2, $fn=30);
+            // Piastrina di collegamento verso la zona LED
+            hull(){
+                cylinder(d=7.0, h=2.6, $fn=24);
+                translate([min_x + 1.5, ly - 1.5, 0]){ cube([max_x - min_x - 3.0, 5.5, 2.6]); }
+            }
+            // Blocchetto convogliatore sopra i due LED SMD
+            translate([min_x, ly - 2.2, 0]){
+                cube([max_x - min_x, 6.8, 7.2]);
+            }
         }
-        // Foro vite M2.5 per il distanziale
-        translate([0, 0, -1]){ cylinder(d=2.8, h=5, $fn=20); }
-        // Sede testa vite
-        translate([0, 0, 1.2]){ cylinder(d=5.5, h=3, $fn=20); }
-        
-        // Due fori guida per le fibre ottiche da 1mm distanziati di 2.5mm
-        translate([-1.25, 14, -1]){ cylinder(d=fh, h=8, $fn=16); }
-        translate([ 1.25, 14, -1]){ cylinder(d=fh, h=8, $fn=16); }
-        
-        // Invito a imbuto per inserimento rapido della fibra
-        translate([-1.25, 14, 4.5]){ cylinder(d1=fh, d2=fh+1.0, h=1.6, $fn=16); }
-        translate([ 1.25, 14, 4.5]){ cylinder(d1=fh, d2=fh+1.0, h=1.6, $fn=16); }
+        // Foro vite per fissaggio sul distanziale della scheda
+        translate([0, 0, -1]){ cylinder(d=screw_d, h=6, $fn=20); }
+        translate([0, 0, 1.5]){ cylinder(d=5.8, h=3, $fn=20); }
+
+        // Camere di cattura luce + tunnel inclinati a 45° verso il fronte per trattenere la fibra ottica
+        for(lx = [lx1, lx2]){
+            // Campana inferiore sopra il LED SMD
+            translate([lx, ly, -0.1]){ cylinder(d1=3.2, d2=fh, h=2.0, $fn=20); }
+            // Tunnel guida inclinato a 45° verso +Y (fronte)
+            translate([lx, ly, 1.5]){
+                rotate([-45, 0, 0]){
+                    cylinder(d=fh, h=11.0, $fn=20);
+                }
+            }
+        }
+    }
+}
+
+// Simulazione 3D del convogliatore montato sulla scheda e delle fibre ottiche fino al pannello frontale
+module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0){
+    x0 = 20 + gauge_box + pi_ox;
+    y0 = 6.0;
+    t  = 1.6;
+    hole_x = (board_type == "olimex_lime2") ? (x0 + 54.81) : (x0 + 52.5);
+    z_hole = (board_type == "olimex_lime2") ?
+             (gauge + (dp - 4.0 - 21.55 + Board_Offset_Z - 40.86 - 21.55) + 21.55) :
+             (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 49.0));
+
+    led_x1 = (board_type == "olimex_lime2") ? (x0 + 48.0) :
+             (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 42.0) :
+             (board_type == "rpizero") ? (x0 + 23.0) :
+             (board_type == "rpipico") ? (x0 + 10.5) : (x0 + 46.0);
+    led_x2 = (board_type == "olimex_lime2") ? (x0 + 55.0) :
+             (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 48.0) : (x0 + 53.0);
+
+    z_led = (board_type == "olimex_lime2") ? (z_hole - 7.55) : (z_hole - 1.0);
+    z_front = gauge + 4.5;
+
+    // Staffa montata sul distanziale anteriore destro (ruotata sul piano XZ della scheda)
+    if(board_type == "olimex_lime2" || board_type == "rpi3" || board_type == "rpi4" || board_type == "rpi5"){
+        color([0.92, 0.72, 0.15]){
+            translate([hole_x, y0 + t, z_hole]){
+                rotate([90, 0, 0]){
+                    light_guide_bracket(fiber_d, board_type);
+                }
+            }
+        }
+    }
+
+    // Fibre ottiche simulate dal convogliatore LED ai collarini sul pannello frontale
+    fiber_list = (board_type == "rpizero" || board_type == "rpipico") ? [led_x1] : [led_x1, led_x2];
+    for(fx = fiber_list){
+        color([0.20, 0.85, 1.00, 0.85]){
+            hull(){
+                translate([fx, y0 + t + 3.5, z_led - 3.5]){ sphere(d=fiber_d, $fn=12); }
+                translate([fx, 5.0, (z_led + z_front)/2]){ sphere(d=fiber_d, $fn=12); }
+            }
+            hull(){
+                translate([fx, 5.0, (z_led + z_front)/2]){ sphere(d=fiber_d, $fn=12); }
+                translate([fx, 5.0, 0.2]){ sphere(d=fiber_d, $fn=12); }
+            }
+        }
     }
 }
 
