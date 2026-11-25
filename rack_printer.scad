@@ -972,7 +972,7 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     t  = (board_type == "rpipico") ? 1.0 : 1.6;
 
     z_led = (board_type == "olimex_lime2") ? (gauge + (dp - 4.0 - 21.55 + Board_Offset_Z - 40.86 - 21.55) + 76.0) :
-            (board_type == "bbb" || board_type == "bbb_cape") ? (gauge + (dp - 3.0 - 8.89 + Board_Offset_Z - 66.04 - 11.43) + 73.5) :
+            (board_type == "bbb" || board_type == "bbb_cape") ? (gauge + (dp - 3.0 - 8.89 + Board_Offset_Z - 66.04 - 11.43) + 76.0) :
             (board_type == "rpizero") ? (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 58.0 - 3.5) + 61.0) :
             (board_type == "rpipico") ? (gauge + (dp - 4.0 - 2.0 + Board_Offset_Z - 47.0 - 2.0) + 46.0) :
             (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 49.0 - 3.5) + 2.5); // rpi3 / rpi4 / rpi5
@@ -996,22 +996,22 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     led_pairs = (board_type == "rpizero" || board_type == "rpipico") ?
                 [[led_x1, front_x1, z_led]] :
                 (board_type == "bbb" || board_type == "bbb_cape") ? [
-                    [x0 + 4.5,  x0 + 34.0, z_led],
-                    [x0 + 4.5,  x0 + 37.0, z_led + 2.4],
-                    [x0 + 4.5,  x0 + 40.0, z_led + 4.8],
-                    [x0 + 4.5,  x0 + 43.0, z_led + 7.2],
-                    [x0 + 39.5, front_x2,  z_led + 2.5] // PWR D1 vicino al jack 5V P1 -> foro PWR a x0+50
+                    [x0 + 4.0,  x0 + 34.0, z_led],
+                    [x0 + 6.4,  x0 + 37.0, z_led],
+                    [x0 + 8.8,  x0 + 40.0, z_led],
+                    [x0 + 11.2, x0 + 43.0, z_led],
+                    [x0 + 39.5, front_x2,  z_led] // PWR D1 vicino al jack 5V P1 -> foro PWR a x0+50
                 ] :
                 [[led_x1, front_x1, z_led], [led_x2, front_x2, z_led2]];
 
     // Render del supporto scelto (rotate([-90,0,0]) porta +Z su +Y in alto e +Y su -Z verso il fronte)
     if(board_type == "bbb" || board_type == "bbb_cape"){
-        // Pezzo unico a 4 fibre su D2..D5 (USR0..USR3 lungo il bordo sx) + cappuccio singolo su D1 (PWR vicino P1 a dx)
+        // Pezzo unico orizzontale a 4 fibre su D2..D5 (USR0..USR3) + cappuccio singolo su D1 (PWR vicino P1)
         color([0.92, 0.72, 0.15]){
-            translate([x0 + 4.5, y0 + t, z_led]){
-                rotate([-90, 0, -90]){ light_guide_bbb_usr4(fiber_d); }
+            translate([x0 + 4.0, y0 + t, z_led]){
+                rotate([-90, 0, 0]){ light_guide_bbb_usr4(fiber_d); }
             }
-            translate([x0 + 39.5, y0 + t, z_led + 2.5]){
+            translate([x0 + 39.5, y0 + t, z_led]){
                 rotate([-90, 0, 0]){ light_guide_single(fiber_d); }
             }
         }
@@ -1067,10 +1067,9 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
         y_base = y0 + t + ((style == "single_screw") ? (idx * 2.3) : 0);
         f_col = (idx == len(led_pairs) - 1 && len(led_pairs) > 1) ? [1.00, 0.25, 0.20] : [0.20, 0.85, 1.00];
 
-        is_bbb_usr = ((board_type == "bbb" || board_type == "bbb_cape") && idx < 4);
         p_start = [lx, y_base + 0.8, zl];
-        p_exit  = is_bbb_usr ? [lx + 4.2, y_base + 5.2, zl] : [lx, y_base + 5.2, zl - 4.2];
-        p_mid   = [(p_exit[0] + fx)/2, (y_base + 5.2 + front_y)/2 - 0.5, (p_exit[2] + z_front)/2];
+        p_exit  = [lx, y_base + 5.2, zl - 4.2];
+        p_mid   = [(lx + fx)/2, (y_base + 5.2 + front_y)/2 - 0.5, (zl - 4.2 + z_front)/2];
         p_col   = [fx, front_y, z_front];
         p_front = [fx, front_y, -0.6];
 
@@ -1999,10 +1998,10 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
                 translate([34.0, -1.8, -1.5]){ cube([14, 1.8, 15]); } // microSD (P7 underside)
             }
 
-            // 4 LED Blu di stato Utente (D2..D5 / USR0..USR3 lungo il bordo sx) + LED PWR (D1 vicino a P1)
+            // 4 LED Blu di stato Utente (D2..D5 / USR0..USR3 in fila orizzontale a sx di P5) + LED PWR (D1 vicino a P1)
             color([0.1, 0.45, 0.95]){
                 for(led_i=[0:3]){
-                    translate([4.5, t, 73.5 + led_i*2.4]){
+                    translate([4.0 + led_i*2.4, t, 76.0]){
                         cylinder(d=1.2, h=0.6, $fn=12);
                     }
                 }
