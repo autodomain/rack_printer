@@ -140,7 +140,7 @@ module go(){
     bbb_front_z  = bbb_rear_z - 66.04;
 
     // Olimex LIME2: lunghezza 83.96mm x 59.61mm, fori M3 (3.3mm) a 21.55mm da fronte/retro e 4.81mm dai bordi laterali (50.00mm x 40.86mm)
-    lime_rear_z  = eff_depth - 3.0 - 21.55;
+    lime_rear_z  = eff_depth - 4.0 - 21.55;
     lime_front_z = lime_rear_z - 40.86;
 
     // RPi Zero / Zero 2 W: lunghezza 65mm, fori a 3.5mm dal fronte e 3.5mm dal retro
@@ -192,7 +192,7 @@ module go(){
     // Colonnine per disco SSD da 2.5" (Standard SFF-8201: fori distanziati 61.7mm x 76.6mm)
     // SSD ruotato di 180 gradi: connettore SATA rivolto verso il fronte (verso i connettori interni LIME2)
     ssd_x0 = (pi_offset_x > width/2) ? 14 : (width - 61.7 - 14);
-    ssd_z0 = eff_depth - 89.0;
+    ssd_z0 = eff_depth - 93.6;
     ssd_pegs = (Board_Type != "none" && Include_SSD) ? [
         [ssd_x0,        ssd_z0,        6, 2.8, 5],
         [ssd_x0 + 61.7, ssd_z0,        6, 2.8, 5],
@@ -309,24 +309,24 @@ module go(){
     }else if(Part=="board_preview"){
         // Visualizzazione 3D standalone della scheda e degli accessori interni per ispezione
         rotate([90,0,0]){
-            %cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
-            board_3d_mockup(Board_Type, pi_offset_x, eff_depth, Include_SSD, Include_StepDown, StepDown_Type);
+            %cabinet(Depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
+            board_3d_mockup(Board_Type, pi_offset_x, Depth, Include_SSD, Include_StepDown, StepDown_Type);
         }
     }else if(Part=="frontplate" || Part=="b" || Part=="FrontPlate"){
         // Pronto per la stampa 3D (piatto sul piano di stampa XY)
         frontplate(Units, rpi_front_sq, rpi_front_rd, [], screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
     }else if(Part=="cabinet" || Part=="c" || Part=="Cabinet"){
         // Corpo scatola: se Show_Board_Mockup e attivo, mostra anche la scheda e gli accessori montati all'interno!
-        cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
+        cabinet(Depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
         if(Show_Board_Mockup && Board_Type != "none"){
-            board_3d_mockup(Board_Type, pi_offset_x, eff_depth, Include_SSD, Include_StepDown, StepDown_Type);
+            board_3d_mockup(Board_Type, pi_offset_x, Depth, Include_SSD, Include_StepDown, StepDown_Type);
         }
     }else if(Part=="lid" || Part=="d" || Part=="Lid"){
         // Pronto per la stampa 3D (piatto sul piano XY)
-        lid(eff_depth, Units, [screw_pos], [screw_pos]); 
+        lid(Depth, Units, [screw_pos], [screw_pos]); 
     }else if(Part=="backplate" || Part=="e" || Part=="BackPlate"){
         // Pronto per la stampa 3D (piatto sul piano XY)
-        back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, []);
+        back_plate(Units, Depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, []);
     }else if(Part=="handles" || Part=="f" || Part=="Handles"){
         handle(Units, true);
     }else if(Part=="light_guide"){
@@ -1532,7 +1532,7 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
         w = 59.61;
         l = 83.96;
         t = 1.6;
-        lime_rear_z  = dp - 3.0 - 21.55;
+        lime_rear_z  = dp - 4.0 - 21.55;
         lime_front_z = lime_rear_z - 40.86;
         z0 = gauge + lime_front_z - 21.55; // Fori reali a 21.55mm da fronte/retro e 4.81mm dai lati
 
@@ -1562,17 +1562,17 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
 
             // Porte Posteriori (lato corto 59.61mm verso il retro - quote ufficiali Olimex):
             // 1. RJ45 Gigabit Ethernet (centro 475mil = 12.06mm)
-            color([0.78, 0.78, 0.80]){ translate([4.0, t, l - 16]){ cube([16, 13.5, 21]); } }
+            color([0.78, 0.78, 0.80]){ translate([4.0, t, l - 16]){ cube([16, 13.5, 18.5]); } }
             // 2. USB 2.0 Host 1 (centro 1025mil = 26.04mm) & USB 2.0 Host 2 (centro 1405mil = 35.69mm)
             color([0.82, 0.82, 0.84]){
-                translate([21.0, t, l - 13]){ cube([9.0, 7.0, 17.0]); }
-                translate([31.0, t, l - 13]){ cube([9.0, 7.0, 17.0]); }
+                translate([21.0, t, l - 13]){ cube([9.0, 7.0, 15.5]); }
+                translate([31.0, t, l - 13]){ cube([9.0, 7.0, 15.5]); }
             }
-            // 3. 5V DC Barrel Jack (angolo posteriore superiore, sporge 198mil = 5mm)
-            color([0.16, 0.16, 0.16]){ translate([45.5, t, l - 9]){ cube([9.5, 11.0, 14.0]); } }
+            // 3. 5V DC Barrel Jack (angolo posteriore superiore)
+            color([0.16, 0.16, 0.16]){ translate([45.5, t, l - 10]){ cube([9.5, 11.0, 12.5]); } }
             color([0.80, 0.80, 0.82]){
-                translate([50.25, t + 5.5, l + 5.0]){
-                    rotate([90, 0, 0]){ cylinder(d=5.5, h=2.5, $fn=24); }
+                translate([50.25, t + 5.5, l + 2.5]){
+                    rotate([90, 0, 0]){ cylinder(d=5.5, h=2.0, $fn=24); }
                 }
             }
 
@@ -1657,7 +1657,7 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
     // --- ACCESSORIO 1: DISCO SSD DA 2.5 POLLICI (RUOTATO 180°: CONNETTORE SATA VERSO IL FRONTE) ---
     if(inc_ssd && (board_type != "none")){
         ssd_x0_rel = (pi_ox > width/2) ? 14 : (width - 61.7 - 14);
-        ssd_z0_rel = dp - 89.0;
+        ssd_z0_rel = dp - 93.6;
         ssd_x = 20 + gauge_box + ssd_x0_rel - 4.065; // Fori centrati sui distanziali
         ssd_z = gauge + ssd_z0_rel - 9.4;            // Fori a 9.4mm dal lato connettore SATA (fronte)
         ssd_y = 5; // Appoggio sulle colonnine da 5mm
