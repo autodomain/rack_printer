@@ -54,6 +54,17 @@ OLED_Offset_X = 0; // [-40:0.5:40]
 // Spostamento verticale fine del display OLED in mm
 OLED_Offset_Y = 0; // [-10:0.5:15]
 
+// Abilita foro sul pannello posteriore per connettore alimentazione jack a barilotto DC
+Enable_Rear_DC_Jack = true;
+// Diametro foro jack DC a barilotto da pannello in mm
+Rear_DC_Jack_Dia = 8.0; // [8.0: DC-022 Standard (foro 8.0 mm), 11.2: DC-099 Metallico (foro 11.2 mm), 12.0: Pannello Grande (foro 12.0 mm)]
+// Posizione del jack DC sul pannello posteriore
+Rear_DC_Jack_Pos = "right"; // [right: A destra (lato accessori/SSD), center: Al centro, left: A sinistra (lato scheda)]
+// Spostamento orizzontale fine jack DC posteriore in mm
+Rear_DC_Jack_Offset_X = 0; // [-50:0.5:50]
+// Spostamento verticale fine jack DC posteriore in mm
+Rear_DC_Jack_Offset_Y = 0; // [-8:0.5:15]
+
 /* [Posizionamento Accessori Interni (mm)] */
 // Orientamento connettori disco SSD 2.5"
 SSD_Orientation = "front_sata"; // [front_sata: Connettore SATA verso il fronte (consigliato per LIME2), rear_sata: Connettore SATA verso il retro]
@@ -342,6 +353,14 @@ module go(){
             [pi_offset_x + 5,  5, 11, 7]   // MicroUSB / Type-C Debug & Power
         ] : [];
 
+    // Foro pannello posteriore per connettore alimentazione jack a barilotto DC
+    dc_jack_x = ((Rear_DC_Jack_Pos == "center") ? (width / 2 - gauge_box) :
+                 (Rear_DC_Jack_Pos == "left")   ? 25 : (width - 2*gauge_box - 25)) + Rear_DC_Jack_Offset_X;
+    dc_jack_y = (Units * unit) / 2 - gauge_box + Rear_DC_Jack_Offset_Y;
+    dc_rear_rd = Enable_Rear_DC_Jack ? [
+        [dc_jack_x, dc_jack_y, Rear_DC_Jack_Dia]
+    ] : [];
+
     // --- SELEZIONE COMPONENTE DA GENERARE ---
     if(Part=="cabinet_assembly" || Part=="a" || Part=="All"){
         // Visualizzazione dell'assieme completo montato orientato dritto verso l'utente
@@ -351,17 +370,20 @@ module go(){
                 %frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
                 %cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
                 %lid(eff_depth, Units, [screw_pos], [screw_pos]);
-                %back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, []);
+                %back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, dc_rear_rd);
                 %handle(Units, false);   
                 board_3d_mockup(Board_Type, pi_offset_x, eff_depth, Include_SSD, Include_StepDown, StepDown_Type);
                 if(Enable_OLED){
                     oled_3d_mockup(oled_cx, oled_cy, OLED_Model);
                 }
+                if(Enable_Rear_DC_Jack){
+                    dc_jack_3d_mockup(20 + gauge_box + dc_jack_x, gauge_box + dc_jack_y, eff_depth, Rear_DC_Jack_Dia);
+                }
             } else {
                 frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
                 cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
                 lid(eff_depth, Units, [screw_pos], [screw_pos]);
-                back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, []);
+                back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, dc_rear_rd);
                 handle(Units, false);   
             }
         }
@@ -373,22 +395,25 @@ module go(){
             if(Enable_OLED){
                 oled_3d_mockup(oled_cx, oled_cy, OLED_Model);
             }
+            if(Enable_Rear_DC_Jack){
+                dc_jack_3d_mockup(20 + gauge_box + dc_jack_x, gauge_box + dc_jack_y, eff_depth, Rear_DC_Jack_Dia);
+            }
         }
     }else if(Part=="frontplate" || Part=="b" || Part=="FrontPlate"){
         // Pronto per la stampa 3D (piatto sul piano di stampa XY)
         frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
     }else if(Part=="cabinet" || Part=="c" || Part=="Cabinet"){
         // Corpo scatola: se Show_Board_Mockup e attivo, mostra anche la scheda e gli accessori montati all'interno!
-        cabinet(Depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
+        cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
         if(Show_Board_Mockup && Board_Type != "none"){
-            board_3d_mockup(Board_Type, pi_offset_x, Depth, Include_SSD, Include_StepDown, StepDown_Type);
+            board_3d_mockup(Board_Type, pi_offset_x, eff_depth, Include_SSD, Include_StepDown, StepDown_Type);
         }
     }else if(Part=="lid" || Part=="d" || Part=="Lid"){
         // Pronto per la stampa 3D (piatto sul piano XY)
-        lid(Depth, Units, [screw_pos], [screw_pos]); 
+        lid(eff_depth, Units, [screw_pos], [screw_pos]); 
     }else if(Part=="backplate" || Part=="e" || Part=="BackPlate"){
         // Pronto per la stampa 3D (piatto sul piano XY)
-        back_plate(Units, Depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, []);
+        back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, dc_rear_rd);
     }else if(Part=="handles" || Part=="f" || Part=="Handles"){
         handle(Units, true);
     }else if(Part=="light_guide"){
@@ -1924,5 +1949,30 @@ module oled_clip_bracket(model="oled_091_wide"){
         // Fori passanti per viti M2 / M2.5
         translate([-span/2, 0, -2.5]){ cylinder(d=2.6, h=6.0, $fn=20); }
         translate([ span/2, 0, -2.5]){ cylinder(d=2.6, h=6.0, $fn=20); }
+    }
+}
+
+// Simulazione 3D del connettore di alimentazione jack DC a barilotto montato sulla piastra posteriore
+module dc_jack_3d_mockup(jx, jy, dp, dia=8.0){
+    z_back = gauge + dp;
+    translate([jx, jy, z_back]){
+        // Ghiera esterna cromata/nera a filo piastra posteriore
+        color([0.75, 0.75, 0.78]){ cylinder(d=dia + 2.5, h=1.8, $fn=24); }
+        // Foro centrale con perno positivo interno
+        color([0.12, 0.12, 0.12]){ cylinder(d=5.5, h=1.9, $fn=20); }
+        color([0.85, 0.75, 0.20]){ cylinder(d=2.1, h=2.0, $fn=16); }
+        // Corpo cilindrico filettato + corpo posteriore interno (-Z)
+        color([0.18, 0.18, 0.20]){
+            translate([0, 0, -13.0]){ cylinder(d=dia - 0.2, h=13.0, $fn=24); }
+        }
+        // Dado di serraggio interno
+        color([0.75, 0.75, 0.78]){
+            translate([0, 0, -gauge_box - 2.2]){ cylinder(d=dia + 3.5, h=2.2, $fn=6); }
+        }
+        // Terminali a saldare interni
+        color([0.85, 0.75, 0.20]){
+            translate([-1.0,  2.5, -17.0]){ cube([2.0, 0.6, 4.0]); }
+            translate([-1.0, -3.1, -17.0]){ cube([2.0, 0.6, 4.0]); }
+        }
     }
 }
