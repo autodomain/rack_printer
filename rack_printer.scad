@@ -28,6 +28,10 @@ Board_Type = "rpi4"; // [none: Nessuno (Cabinet Vuoto / Personalizzato), rpi3: R
 
 // Posizionamento della scheda nel vano da 200mm (vano utile 160mm)
 Board_Position = "left"; // [left: A sinistra (scheda a sinistra e accessori a destra), right: A destra (scheda a destra e accessori a sinistra), center: Centrato nel cabinet]
+// Spostamento laterale fine della scheda/CPU in mm (aggiorna automaticamente fori e aperture sui pannelli)
+Board_Offset_X = 0; // [-10:0.5:60]
+// Spostamento longitudinale (avanti/indietro) della scheda/CPU in mm (aggiorna automaticamente fori e asole laterali)
+Board_Offset_Z = 0; // [-40:0.5:40]
 
 /* [Accessori Interni per RPi 4 e 5] */
 // Includi fori e colonnine per montaggio disco SSD da 2.5 pollici (a destra della RPi)
@@ -135,8 +139,8 @@ module go(){
     // Offset X della scheda all'interno del vano utile (width = 160 mm)
     // Con "left", la scheda e a sinistra (X=10mm dalla parete sinistra, porte HDMI vicine al bordo) e SSD a destra
     // Con "right", la scheda e a destra e gli accessori a sinistra
-    pi_offset_x = (Board_Position == "center") ? (width - board_w)/2 :
-                  (Board_Position == "right")  ? (width - board_w - 10) : 10;
+    pi_offset_x = ((Board_Position == "center") ? (width - board_w)/2 :
+                   (Board_Position == "right")  ? (width - board_w - 10) : 10) + Board_Offset_X;
 
     // Profondita effettiva automatica (compatta e non supera mai i 200mm totali del fondo del contenitore)
     auto_min_dp = (Board_Type == "olimex_lime2") ? (
@@ -145,25 +149,25 @@ module go(){
                   ) : (Include_SSD && Include_StepDown) ? 125 : 98;
     eff_depth = Auto_Depth ? min(200, max(Depth, auto_min_dp)) : min(200, Depth);
 
-    // Coordinate Z distanziali dinamiche: allineano le porte retro a filo con la piastra posteriore (eff_depth)
+    // Coordinate Z distanziali dinamiche + offset utente (aggiornano colonnine, asole e 3D mockup)
     // RPi 3/4/5: lunghezza 85mm, fori a 3.5mm dal fronte (MicroSD) e 23.5mm dal retro (USB/Ethernet)
-    rpi_rear_z   = eff_depth - 3.0 - 23.5;
+    rpi_rear_z   = eff_depth - 3.0 - 23.5 + Board_Offset_Z;
     rpi_front_z  = rpi_rear_z - 58.0;
 
     // BeagleBone Black: lunghezza 86.36mm, fori a 11.43mm dal fronte e 8.89mm dal retro
-    bbb_rear_z   = eff_depth - 3.0 - 8.89;
+    bbb_rear_z   = eff_depth - 3.0 - 8.89 + Board_Offset_Z;
     bbb_front_z  = bbb_rear_z - 66.04;
 
     // Olimex LIME2: lunghezza 83.96mm x 59.61mm, fori M3 (3.3mm) a 21.55mm da fronte/retro e 4.81mm dai bordi laterali (50.00mm x 40.86mm)
-    lime_rear_z  = eff_depth - 4.0 - 21.55;
+    lime_rear_z  = eff_depth - 4.0 - 21.55 + Board_Offset_Z;
     lime_front_z = lime_rear_z - 40.86;
 
     // RPi Zero / Zero 2 W: lunghezza 65mm, fori a 3.5mm dal fronte e 3.5mm dal retro
-    zero_rear_z  = eff_depth - 3.0 - 3.5;
+    zero_rear_z  = eff_depth - 3.0 - 3.5 + Board_Offset_Z;
     zero_front_z = zero_rear_z - 58.0;
 
     // RPi Pico / Pico W: lunghezza 51mm, fori a 2mm dal fronte e 2mm dal retro
-    pico_rear_z  = eff_depth - 3.0 - 2.0;
+    pico_rear_z  = eff_depth - 3.0 - 2.0 + Board_Offset_Z;
     pico_front_z = pico_rear_z - 47.0;
 
     // Distanziali (Pegs) in base al modello di scheda
@@ -245,14 +249,13 @@ module go(){
     // Unione di tutti i distanziali da montare sul fondo del cabinet
     all_pegs = concat(rpi_base_pegs, ssd_pegs, step_pegs);
 
-    // Tagli frontali: asola MicroSD o USB di servizio
-    sd_center_x = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 30) :
-                  (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 27.3) :
+    // Tagli frontali: asola MicroSD o USB di servizio (non necessaria su Olimex LIME2 dove la MicroSD e interna)
+    sd_center_x = (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 27.3) :
                   (Board_Type == "rpizero")      ? (20 + gauge_box + pi_offset_x + 15) :
                   (Board_Type == "rpipico")      ? (20 + gauge_box + pi_offset_x + 10.5) :
                   (20 + gauge_box + pi_offset_x + 28);
     sd_w = (Board_Type == "rpipico") ? 12 : (Board_Type == "rpizero") ? 14 : 16;
-    rpi_front_sq = (Board_Type != "none") ? [
+    rpi_front_sq = (Board_Type != "none" && Board_Type != "olimex_lime2") ? [
         [sd_center_x - sd_w/2, 2, sd_w, 4.5]
     ] : [];
 
@@ -600,18 +603,18 @@ module cabinet(dp,u,screw_bottom_front,round_peg,screw_side_front,pi_ox=14){
         if(Board_Type != "none"){
             if(Board_Type == "rpi3"){
                 // MicroUSB Power (z_local 7..14) + HDMI Standard (z_local 24..40) -> PCB front = gauge + dp - 88
-                translate([cutout_x, 6, dp - 80]){ cube([15, 14, 42]); }
+                translate([cutout_x, 6, dp - 80 + Board_Offset_Z]){ cube([15, 14, 42]); }
             } else if(Board_Type == "rpi4" || Board_Type == "rpi5"){
                 // USB-C Power (z_local 7..16) + Dual Micro-HDMI (z_local 22..43) -> PCB front = gauge + dp - 88
-                translate([cutout_x, 6, dp - 80]){ cube([15, 13, 44]); }
+                translate([cutout_x, 6, dp - 80 + Board_Offset_Z]){ cube([15, 13, 44]); }
             } else if(Board_Type == "olimex_lime2"){
                 // Su Olimex LIME2 i lati lunghi ospitano i pin header GPIO/LCD (nessuna porta laterale esterna)
             } else if(Board_Type == "bbb" || Board_Type == "bbb_cape"){
                 // Accesso laterale debug/espansione -> PCB front = gauge + dp - 89.36
-                translate([cutout_x, 6, dp - 72]){ cube([15, 14, 40]); }
+                translate([cutout_x, 6, dp - 72 + Board_Offset_Z]){ cube([15, 14, 40]); }
             } else if(Board_Type == "rpizero"){
                 // Mini-HDMI + Dual MicroUSB sul lato lungo -> PCB front = gauge + dp - 68
-                translate([cutout_x, 6, dp - 62]){ cube([15, 12, 56]); }
+                translate([cutout_x, 6, dp - 62 + Board_Offset_Z]){ cube([15, 12, 56]); }
             }
         }
         
@@ -1282,7 +1285,7 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
         w = 56;
         l = 85;
         t = 1.6;
-        rpi_rear_z  = dp - 3.0 - 23.5;
+        rpi_rear_z  = dp - 3.0 - 23.5 + Board_Offset_Z;
         rpi_front_z = rpi_rear_z - 58.0;
         z0 = gauge + rpi_front_z - 3.5; // Fori anteriori a 3.5mm dal fronte, posteriori a 23.5mm dal retro
 
@@ -1378,7 +1381,7 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
         w = 54.61;
         l = 86.36;
         t = 1.6;
-        bbb_rear_z  = dp - 3.0 - 8.89;
+        bbb_rear_z  = dp - 3.0 - 8.89 + Board_Offset_Z;
         bbb_front_z = bbb_rear_z - 66.04;
         z0 = gauge + bbb_front_z - 11.43; // Allineato a filo con la piastra posteriore
 
@@ -1550,7 +1553,7 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
         w = 59.61;
         l = 83.96;
         t = 1.6;
-        lime_rear_z  = dp - 4.0 - 21.55;
+        lime_rear_z  = dp - 4.0 - 21.55 + Board_Offset_Z;
         lime_front_z = lime_rear_z - 40.86;
         z0 = gauge + lime_front_z - 21.55; // Fori reali a 21.55mm da fronte/retro e 4.81mm dai lati
 
@@ -1620,7 +1623,7 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
         w = 30;
         l = 65;
         t = 1.6;
-        zero_rear_z  = dp - 3.0 - 3.5;
+        zero_rear_z  = dp - 3.0 - 3.5 + Board_Offset_Z;
         zero_front_z = zero_rear_z - 58.0;
         z0 = gauge + zero_front_z - 3.5; // Allineato a filo con la piastra posteriore
 
@@ -1649,7 +1652,7 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
         w = 21;
         l = 51;
         t = 1.6;
-        pico_rear_z  = dp - 3.0 - 2.0;
+        pico_rear_z  = dp - 3.0 - 2.0 + Board_Offset_Z;
         pico_front_z = pico_rear_z - 47.0;
         z0 = gauge + pico_front_z - 2.0; // Allineato a filo con la piastra posteriore
 
