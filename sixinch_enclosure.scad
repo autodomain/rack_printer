@@ -65,6 +65,9 @@ Rear_DC_Jack_Offset_X = 0; // [-70:0.5:70]
 // Spostamento verticale fine jack DC posteriore in mm
 Rear_DC_Jack_Offset_Y = 0; // [-10:0.5:30]
 
+// Abilita le maniglie frontali e i relativi 4 fori svasati sul pannello frontale
+Enable_Front_Handles = true;
+
 /* [Posizionamento Accessori Interni (mm)] */
 // Orientamento connettori disco SSD 2.5"
 SSD_Orientation = "front_sata"; // [front_sata: Connettore SATA verso il fronte (consigliato per LIME2), rear_sata: Connettore SATA verso il retro]
@@ -371,7 +374,7 @@ module go(){
                 %cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
                 %lid(eff_depth, Units, [screw_pos], [screw_pos]);
                 %back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, dc_rear_rd);
-                %handle(Units, false);   
+                if(Enable_Front_Handles){ %handle(Units, false); }
                 board_3d_mockup(Board_Type, pi_offset_x, eff_depth, Include_SSD, Include_StepDown, StepDown_Type);
                 if(Enable_OLED){
                     oled_3d_mockup(oled_cx, oled_cy, OLED_Model);
@@ -384,7 +387,7 @@ module go(){
                 cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
                 lid(eff_depth, Units, [screw_pos], [screw_pos]);
                 back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, dc_rear_rd);
-                handle(Units, false);   
+                if(Enable_Front_Handles){ handle(Units, false); }
             }
         }
     }else if(Part=="board_preview"){
@@ -494,11 +497,13 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
         // Cabinet mounting holes
         frontholes(u, screw_top, screw_bottom_front, screw_side_front);
         
-        // Handle holes
-        translate([18, 4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }
-        translate([18, u*unit-4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }        
-        translate([Rack_Width-18, 4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }
-        translate([Rack_Width-18, u*unit-4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }
+        // Handle holes (solo se Enable_Front_Handles e abilitato)
+        if(Enable_Front_Handles){
+            translate([18, 4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }
+            translate([18, u*unit-4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }        
+            translate([Rack_Width-18, 4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }
+            translate([Rack_Width-18, u*unit-4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }
+        }
 
         // Incisione scritte LED sulla facciata frontale sopra i fori della fibra
         if(Board_Type != "none" && Enable_LED_Guide){
