@@ -39,6 +39,21 @@ Include_StepDown = true;
 // Modello di stabilizzatore switching
 StepDown_Type = "LM2596"; // [LM2596: Modulo LM2596 / LM2596S (fori 31.5x15mm), XL4015: Modulo XL4015 5A alta potenza (fori 47x18mm), Mini360: Modulo ultracompatto Mini360 / MP1584]
 
+/* [Posizionamento Accessori Interni (mm)] */
+// Orientamento connettori disco SSD 2.5"
+SSD_Orientation = "front_sata"; // [front_sata: Connettore SATA verso il fronte (consigliato per LIME2), rear_sata: Connettore SATA verso il retro]
+// Spostamento laterale fine SSD 2.5" in mm
+SSD_Offset_X = 0; // [-30:0.5:30]
+// Spostamento longitudinale (avanti/indietro) SSD 2.5" in mm
+SSD_Offset_Z = 0; // [-30:0.5:40]
+
+// Zona di posizionamento regolatore DC-DC Step-Down
+StepDown_Side = "auto"; // [auto: Automatico (davanti all'SSD per LIME2, davanti alla scheda per altre), opposite: Sul lato opposto alla scheda, front_board: Davanti alla scheda]
+// Spostamento laterale fine regolatore Step-Down in mm
+StepDown_Offset_X = 0; // [-40:0.5:80]
+// Spostamento longitudinale (avanti/indietro) regolatore Step-Down in mm
+StepDown_Offset_Z = 0; // [-10:0.5:80]
+
 /* [Sistema LED Frontali (Fibra Ottica)] */
 // Abilita fori e tubetti per portare la luce dei LED sul frontale con fibra ottica
 Enable_LED_Guide = true;
@@ -190,9 +205,9 @@ module go(){
         ] : [];
 
     // Colonnine per disco SSD da 2.5" (Standard SFF-8201: fori distanziati 61.7mm x 76.6mm)
-    // Posizionato tra la scheda e i pozzetti viti laterali (X_abs = 96..165.85mm) e arretrato dal retro per evitare collisioni con screwtrap
-    ssd_x0 = (pi_offset_x > width/2) ? (13 + 4.065) : (width - 61.7 - 16);
-    ssd_z0 = eff_depth - 103.0;
+    // Posizionato tra la scheda e i pozzetti viti laterali (regolabile tramite SSD_Offset_X / SSD_Offset_Z / SSD_Orientation)
+    ssd_x0 = ((pi_offset_x > width/2) ? (13 + 4.065) : (width - 61.7 - 16)) + SSD_Offset_X;
+    ssd_z0 = (eff_depth - 103.0) + SSD_Offset_Z;
     ssd_pegs = (Board_Type != "none" && Include_SSD) ? [
         [ssd_x0,        ssd_z0,        6, 2.8, 5],
         [ssd_x0 + 61.7, ssd_z0,        6, 2.8, 5],
@@ -201,14 +216,17 @@ module go(){
     ] : [];
 
     // Colonnine per stabilizzatore switching DC-DC step-down (5V)
-    // Nota: su Olimex LIME2 il fronte ospita HDMI, Mini-USB e SATA+Power, quindi il regolatore NON va mai davanti alla LIME2!
-    lime_step_ok = (Board_Type != "olimex_lime2") || !Include_SSD || (StepDown_Type == "Mini360") || (eff_depth >= 128);
+    // Posizionamento configurabile da menu (StepDown_Side, StepDown_Offset_X, StepDown_Offset_Z)
+    step_use_opposite = (StepDown_Side == "opposite") || (StepDown_Side == "auto" && (Board_Type == "olimex_lime2" || !Include_SSD));
+    lime_step_ok = (Board_Type != "olimex_lime2") || (StepDown_Side != "auto") || !Include_SSD || (StepDown_Type == "Mini360") || (eff_depth >= 128);
     if(Board_Type == "olimex_lime2" && Include_SSD && Include_StepDown && !lime_step_ok){
         echo("ATTENZIONE: Con Olimex LIME2 + SSD, abilita Auto_Depth (o imposta Depth >= 130mm) per alloggiare il regolatore davanti all'SSD senza ostruire HDMI/SATA.");
     }
-    step_x0 = (Board_Type == "olimex_lime2") ? (Include_SSD ? (ssd_x0 + 10) : ((pi_offset_x > width/2) ? 14 : (width - 45 - 14))) :
-              (Include_SSD ? ((pi_offset_x > width/2) ? (width - 45 - 14) : 18) : ((pi_offset_x > width/2) ? 14 : (width - 45 - 14)));
-    step_z0 = (Board_Type == "olimex_lime2") ? (Include_SSD ? 5 : 20) : (Include_SSD ? 6 : 20);
+    step_base_x0 = step_use_opposite ? (Include_SSD ? (ssd_x0 + 10) : ((pi_offset_x > width/2) ? 14 : (width - 45 - 14))) :
+                                       ((pi_offset_x > width/2) ? (width - 45 - 14) : 18);
+    step_base_z0 = step_use_opposite ? (Include_SSD ? 5 : 20) : 6;
+    step_x0 = step_base_x0 + StepDown_Offset_X;
+    step_z0 = step_base_z0 + StepDown_Offset_Z;
     step_pegs = (Board_Type != "none" && Include_StepDown && lime_step_ok) ? (
         (StepDown_Type == "LM2596") ? [
             [step_x0,        step_z0,        5, 2.8, 5],
@@ -1654,12 +1672,13 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
         }
     }
 
-    // --- ACCESSORIO 1: DISCO SSD DA 2.5 POLLICI (RUOTATO 180°: CONNETTORE SATA VERSO IL FRONTE) ---
+    // --- ACCESSORIO 1: DISCO SSD DA 2.5 POLLICI ---
     if(inc_ssd && (board_type != "none")){
-        ssd_x0_rel = (pi_ox > width/2) ? (13 + 4.065) : (width - 61.7 - 16);
-        ssd_z0_rel = dp - 103.0;
+        ssd_x0_rel = ((pi_ox > width/2) ? (13 + 4.065) : (width - 61.7 - 16)) + SSD_Offset_X;
+        ssd_z0_rel = (dp - 103.0) + SSD_Offset_Z;
+        ssd_front_sata = (SSD_Orientation == "front_sata");
         ssd_x = 20 + gauge_box + ssd_x0_rel - 4.065; // Fori centrati sui distanziali
-        ssd_z = gauge + ssd_z0_rel - 9.4;            // Fori a 9.4mm dal lato connettore SATA (fronte)
+        ssd_z = gauge + ssd_z0_rel - (ssd_front_sata ? 9.4 : 14.0);
         ssd_y = 5; // Appoggio sulle colonnine da 5mm
         ssd_w = 69.85;
         ssd_l = 100;
@@ -1678,24 +1697,28 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
             color([0.1, 0.35, 0.75]){
                 translate([8, ssd_h + 0.18, 30]){ cube([ssd_w - 16, 0.1, 14]); }
             }
-            // Connettore SATA Anteriore 7+15 pin (rivolto verso il fronte / LIME2)
-            color([0.15, 0.15, 0.15]){
-                translate([15.85, 1, -4]){ cube([46, 5, 4]); }
-            }
-            // Contatti dorati SATA
-            color([0.85, 0.75, 0.2]){
-                translate([17.85, 2, -4.2]){ cube([42, 2, 0.3]); }
+            if(ssd_front_sata){
+                // Connettore SATA Anteriore 7+15 pin (rivolto verso il fronte / LIME2)
+                color([0.15, 0.15, 0.15]){ translate([15.85, 1, -4]){ cube([46, 5, 4]); } }
+                color([0.85, 0.75, 0.2]){ translate([17.85, 2, -4.2]){ cube([42, 2, 0.3]); } }
+            } else {
+                // Connettore SATA Posteriore 7+15 pin
+                color([0.15, 0.15, 0.15]){ translate([8, 1, ssd_l]){ cube([46, 5, 4]); } }
+                color([0.85, 0.75, 0.2]){ translate([10, 2, ssd_l + 3.9]){ cube([42, 2, 0.3]); } }
             }
         }
     }
 
     // --- ACCESSORIO 2: STABILIZZATORE SWITCHING DC-DC STEP-DOWN ---
-    lime_step_ok_m = (board_type != "olimex_lime2") || !inc_ssd || (step_type == "Mini360") || (dp >= 128);
+    step_use_opp_m = (StepDown_Side == "opposite") || (StepDown_Side == "auto" && (board_type == "olimex_lime2" || !inc_ssd));
+    lime_step_ok_m = (board_type != "olimex_lime2") || (StepDown_Side != "auto") || !inc_ssd || (step_type == "Mini360") || (dp >= 128);
     if(inc_step && (board_type != "none") && lime_step_ok_m){
-        ssd_x0_m = (pi_ox > width/2) ? 14 : (width - 61.7 - 14);
-        step_x0_rel = (board_type == "olimex_lime2") ? (inc_ssd ? (ssd_x0_m + 10) : ((pi_ox > width/2) ? 14 : (width - 45 - 14))) :
-                      (inc_ssd ? ((pi_ox > width/2) ? (width - 45 - 14) : 18) : ((pi_ox > width/2) ? 14 : (width - 45 - 14)));
-        step_z0_rel = (board_type == "olimex_lime2") ? (inc_ssd ? 5 : 20) : (inc_ssd ? 6 : 20);
+        ssd_x0_m = ((pi_ox > width/2) ? (13 + 4.065) : (width - 61.7 - 16)) + SSD_Offset_X;
+        step_base_x_m = step_use_opp_m ? (inc_ssd ? (ssd_x0_m + 10) : ((pi_ox > width/2) ? 14 : (width - 45 - 14))) :
+                                         ((pi_ox > width/2) ? (width - 45 - 14) : 18);
+        step_base_z_m = step_use_opp_m ? (inc_ssd ? 5 : 20) : 6;
+        step_x0_rel = step_base_x_m + StepDown_Offset_X;
+        step_z0_rel = step_base_z_m + StepDown_Offset_Z;
         step_x = 20 + gauge_box + step_x0_rel - ((step_type == "LM2596") ? 5.75 : (step_type == "XL4015") ? 3.5 : 0);
         step_z = gauge + step_z0_rel - 3.0;
         step_y = 5; // Appoggio sulle colonnine da 5mm
