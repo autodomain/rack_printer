@@ -354,12 +354,12 @@ module go(){
 
     // Fori per fibra ottica LED di stato (tutti sul frontale per massima visibilita)
     led_y = 12.0;
-    led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 48) :
+    led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 44) :
              (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 36) :
              (Board_Type == "rpizero")      ? (20 + gauge_box + pi_offset_x + 24) :
              (Board_Type == "rpipico")      ? (20 + gauge_box + pi_offset_x + 14) :
              (20 + gauge_box + pi_offset_x + 14);
-    led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 54) :
+    led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 50) :
              (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 43.2) :
              (20 + gauge_box + pi_offset_x + 20);
     rpi_front_rd = (Board_Type != "none" && Enable_LED_Guide) ? (
@@ -601,12 +601,12 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
         // Incisione scritte LED sulla facciata frontale sopra i fori della fibra
         if(Board_Type != "none" && Enable_LED_Guide){
             led_y = 12.0;
-            led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 48) :
+            led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 44) :
                      (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 36) :
                      (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24) :
                      (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14) :
                      (20 + gauge_box + pi_ox + 14);
-            led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 54) :
+            led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 50) :
                      (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 43.2) :
                      (20 + gauge_box + pi_ox + 20);
             txt1 = (Board_Type == "bbb" || Board_Type == "bbb_cape") ? "USR" : "ACT";
@@ -632,12 +632,12 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
     // Tubetti di ritenzione e guida della fibra ottica sul retro del pannello frontale
     if(Board_Type != "none" && Enable_LED_Guide){
         led_y = 12.0;
-        led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 48) :
+        led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 44) :
                  (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 36) :
                  (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24) :
                  (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14) :
                  (20 + gauge_box + pi_ox + 14);
-        led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 54) :
+        led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 50) :
                  (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 43.2) :
                  (20 + gauge_box + pi_ox + 20);
         collar_d = max(3.0, fiber_hole + 1.8);
@@ -797,7 +797,7 @@ module light_guide_single(fiber_d=1.0){
 // Helper coordinate relative LED rispetto al distanziale piu vicino per ciascuna scheda
 function _led_screw_d(b) = (b == "olimex_lime2" || b == "bbb" || b == "bbb_cape") ? 3.2 : (b == "rpipico") ? 2.2 : 2.8;
 function _led_rel_xy(b, idx=0) =
-    (b == "olimex_lime2") ? ((idx == 0) ? [-6.81, -3.59] : [-0.81, -3.59]) :
+    (b == "olimex_lime2") ? ((idx == 0) ? [-7.81, -13.59] : [-9.81, -10.09]) :
     (b == "bbb" || b == "bbb_cape") ? ((idx == 0) ? [-10.5, 9.47] : [-3.3, 9.47]) :
     (b == "rpizero") ? [-2.5, 0.5] :
     (b == "rpipico") ? [1.7, 3.0] :
@@ -924,31 +924,32 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     y0 = 6.0;
     t  = (board_type == "rpipico") ? 1.0 : 1.6;
 
-    z_led = (board_type == "olimex_lime2") ? (gauge + (dp - 4.0 - 21.55 + Board_Offset_Z - 40.86 - 21.55) + 66.0) :
+    z_led = (board_type == "olimex_lime2") ? (gauge + (dp - 4.0 - 21.55 + Board_Offset_Z - 40.86 - 21.55) + 76.0) :
             (board_type == "bbb" || board_type == "bbb_cape") ? (gauge + (dp - 3.0 - 8.89 + Board_Offset_Z - 66.04 - 11.43) + 68.0) :
             (board_type == "rpizero") ? (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 58.0 - 3.5) + 61.0) :
             (board_type == "rpipico") ? (gauge + (dp - 4.0 - 2.0 + Board_Offset_Z - 47.0 - 2.0) + 46.0) :
             (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 49.0 - 3.5) + 2.5); // rpi3 / rpi4 / rpi5
+    z_led2 = (board_type == "olimex_lime2") ? (z_led - 3.5) : z_led;
 
-    led_x1 = (board_type == "olimex_lime2") ? (x0 + 48.0) :
+    led_x1 = (board_type == "olimex_lime2") ? (x0 + 47.0) :
              (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 36.0) :
              (board_type == "rpizero") ? (x0 + 24.0) :
              (board_type == "rpipico") ? (x0 + 6.5) : (x0 + 3.5);
-    led_x2 = (board_type == "olimex_lime2") ? (x0 + 54.0) :
+    led_x2 = (board_type == "olimex_lime2") ? (x0 + 45.0) :
              (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 43.2) : (x0 + 7.5);
 
-    front_x1 = (board_type == "olimex_lime2") ? (x0 + 48.0) :
+    front_x1 = (board_type == "olimex_lime2") ? (x0 + 44.0) :
                (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 36.0) :
                (board_type == "rpizero") ? (x0 + 24.0) :
                (board_type == "rpipico") ? (x0 + 14.0) : (x0 + 14.0);
-    front_x2 = (board_type == "olimex_lime2") ? (x0 + 54.0) :
+    front_x2 = (board_type == "olimex_lime2") ? (x0 + 50.0) :
                (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 43.2) : (x0 + 20.0);
     front_y = 12.0;
 
     z_front = gauge + 4.5;
     led_pairs = (board_type == "rpizero" || board_type == "rpipico") ?
-                [[led_x1, front_x1]] :
-                [[led_x1, front_x1], [led_x2, front_x2]];
+                [[led_x1, front_x1, z_led]] :
+                [[led_x1, front_x1, z_led], [led_x2, front_x2, z_led2]];
 
     // Render del supporto scelto (rotate([-90,0,0]) porta +Z su +Y in alto e +Y su -Z verso il fronte)
     if(style == "dual_screw"){
@@ -963,9 +964,10 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     } else if(style == "single_screw"){
         for(idx = [0 : len(led_pairs) - 1]){
             px = led_pairs[idx][0];
+            pz = led_pairs[idx][2];
             rel = _led_rel_xy(board_type, idx);
             color([0.92, 0.72, 0.15]){
-                translate([px - rel[0], y0 + t + idx * 2.3, z_led + rel[1]]){
+                translate([px - rel[0], y0 + t + idx * 2.3, pz + rel[1]]){
                     rotate([-90, 0, 0]){
                         light_guide_single_screw(fiber_d, board_type, idx);
                     }
@@ -975,7 +977,7 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     } else if(style == "pcb_clip"){
         for(p = led_pairs){
             color([0.92, 0.72, 0.15]){
-                translate([p[0], y0 + t, z_led - 6.5]){
+                translate([p[0], y0 + t, p[2] - 6.5]){
                     rotate([-90, 0, 0]){
                         light_guide_pcb_clip(fiber_d, t, 6.5);
                     }
@@ -985,7 +987,7 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     } else {
         for(p = led_pairs){
             color([0.92, 0.72, 0.15]){
-                translate([p[0], y0 + t, z_led]){
+                translate([p[0], y0 + t, p[2]]){
                     rotate([-90, 0, 0]){
                         light_guide_single(fiber_d);
                     }
@@ -998,12 +1000,13 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     for(idx = [0 : len(led_pairs) - 1]){
         lx = led_pairs[idx][0];
         fx = led_pairs[idx][1];
+        zl = led_pairs[idx][2];
         y_base = y0 + t + ((style == "single_screw") ? (idx * 2.3) : 0);
         f_col = (idx == 0) ? [1.00, 0.25, 0.20] : [0.20, 1.00, 0.45];
 
-        p_start = [lx, y_base + 0.8, z_led];
-        p_exit  = [lx, y_base + 5.2, z_led - 4.2];
-        p_mid   = [(lx + fx)/2, (y_base + 5.2 + front_y)/2 - 0.5, (z_led - 4.2 + z_front)/2];
+        p_start = [lx, y_base + 0.8, zl];
+        p_exit  = [lx, y_base + 5.2, zl - 4.2];
+        p_mid   = [(lx + fx)/2, (y_base + 5.2 + front_y)/2 - 0.5, (zl - 4.2 + z_front)/2];
         p_col   = [fx, front_y, z_front];
         p_front = [fx, front_y, -0.6];
 
@@ -2080,9 +2083,9 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
             // Slot MicroSD sul lato inferiore anteriore (sotto Mini-USB OTG, a dx dell'HDMI guardando dal fronte)
             color([0.75, 0.75, 0.75]){ translate([2.5, -1.8, -1.5]){ cube([13, 1.8, 15]); } }
 
-            // LED di stato (PWR_LED Rosso, CHGLED / LED1 Verde) nella zona alimentazione posteriore vicino batteria LiPo e jack 5V
-            color([0.9, 0.1, 0.1]){ translate([48, t, 66.0]){ cylinder(d=1.4, h=0.8, $fn=12); } }
-            color([0.1, 0.9, 0.2]){ translate([54, t, 66.0]){ cylinder(d=1.4, h=0.8, $fn=12); } }
+            // LED di stato (PWR_LED Rosso accanto al jack 5V a dx, CHGLED Verde dietro batteria LiPo a sx)
+            color([0.9, 0.1, 0.1]){ translate([47.0, t, 76.0]){ cylinder(d=1.4, h=0.8, $fn=12); } }
+            color([0.1, 0.9, 0.2]){ translate([45.0, t, 72.5]){ cylinder(d=1.4, h=0.8, $fn=12); } }
         }
 
     } else if(board_type == "rpizero"){
