@@ -33,8 +33,8 @@ Board_Offset_X = 0; // [-10:0.5:60]
 // Spostamento longitudinale (avanti/indietro) della scheda/CPU in mm (aggiorna automaticamente fori e asole laterali)
 Board_Offset_Z = 0; // [-40:0.5:40]
 
-/* [Accessori Interni per RPi 4 e 5] */
-// Includi fori e colonnine per montaggio disco SSD da 2.5 pollici (a destra della RPi)
+/* [Accessori Interni & Frontali] */
+// Includi fori e colonnine per montaggio disco SSD da 2.5 pollici
 Include_SSD = true;
 
 // Includi colonnine per stabilizzatore switching DC-DC step-down (5V)
@@ -42,6 +42,17 @@ Include_StepDown = true;
 
 // Modello di stabilizzatore switching
 StepDown_Type = "LM2596"; // [LM2596: Modulo LM2596 / LM2596S (fori 31.5x15mm), XL4015: Modulo XL4015 5A alta potenza (fori 47x18mm), Mini360: Modulo ultracompatto Mini360 / MP1584]
+
+// Abilita finestra e colonnine M2 sul pannello frontale per display OLED I2C
+Enable_OLED = false;
+// Modello di display OLED I2C (rettangolare o quadrato)
+OLED_Model = "oled_096_rect"; // [oled_096_rect: Rettangolare 0.96" 128x64 (23.5x13.5mm), oled_091_wide: Rettangolare 0.91" 128x32 (26x9mm), oled_130_rect: Rettangolare 1.3" 128x64 (31.5x17.5mm), oled_150_sq: Quadrato 1.5" 128x128 (29x29mm - cons. 3U)]
+// Posizione del display OLED sul pannello frontale
+OLED_Position = "right"; // [right: A destra (sopra SSD), center: Al centro, left: A sinistra (lato scheda)]
+// Spostamento orizzontale fine del display OLED in mm
+OLED_Offset_X = 0; // [-40:0.5:40]
+// Spostamento verticale fine del display OLED in mm
+OLED_Offset_Y = 0; // [-10:0.5:15]
 
 /* [Posizionamento Accessori Interni (mm)] */
 // Orientamento connettori disco SSD 2.5"
@@ -259,6 +270,39 @@ module go(){
         [sd_center_x - sd_w/2, 2, sd_w, 4.5]
     ] : [];
 
+    // Finestra e 4 colonnine M2 sul pannello frontale per Display OLED I2C
+    oled_win_w = (OLED_Model == "oled_091_wide") ? 26.0 :
+                 (OLED_Model == "oled_130_rect") ? 31.5 :
+                 (OLED_Model == "oled_150_sq")   ? 29.0 : 23.5;
+    oled_win_h = (OLED_Model == "oled_091_wide") ? 9.0 :
+                 (OLED_Model == "oled_130_rect") ? 17.5 :
+                 (OLED_Model == "oled_150_sq")   ? 29.0 : 13.5;
+    oled_hole_dx = (OLED_Model == "oled_091_wide") ? 33.0 :
+                   (OLED_Model == "oled_130_rect") ? 30.5 :
+                   (OLED_Model == "oled_150_sq")   ? 36.0 : 23.0;
+    oled_hole_dy = (OLED_Model == "oled_091_wide") ? 0.0 :
+                   (OLED_Model == "oled_130_rect") ? 28.5 :
+                   (OLED_Model == "oled_150_sq")   ? 36.0 : 23.0;
+    oled_cx = ((OLED_Position == "center") ? (Rack_Width / 2) :
+               (OLED_Position == "left")   ? 60 : 135) + OLED_Offset_X;
+    oled_cy = (Units * unit) / 2 + OLED_Offset_Y;
+
+    oled_sq = Enable_OLED ? [
+        [oled_cx - oled_win_w/2, oled_cy - oled_win_h/2, oled_win_w, oled_win_h]
+    ] : [];
+    oled_pegs = Enable_OLED ? (
+        (OLED_Model == "oled_091_wide") ? [
+            [oled_cx - oled_hole_dx/2, oled_cy, 4.5, 1.8, 3.5],
+            [oled_cx + oled_hole_dx/2, oled_cy, 4.5, 1.8, 3.5]
+        ] : [
+            [oled_cx - oled_hole_dx/2, oled_cy - oled_hole_dy/2, 4.5, 1.8, 3.5],
+            [oled_cx + oled_hole_dx/2, oled_cy - oled_hole_dy/2, 4.5, 1.8, 3.5],
+            [oled_cx - oled_hole_dx/2, oled_cy + oled_hole_dy/2, 4.5, 1.8, 3.5],
+            [oled_cx + oled_hole_dx/2, oled_cy + oled_hole_dy/2, 4.5, 1.8, 3.5]
+        ]
+    ) : [];
+    all_front_sq = concat(rpi_front_sq, oled_sq);
+
     // Fori per fibra ottica LED di stato
     led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 48) :
              (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 42) :
@@ -313,14 +357,17 @@ module go(){
         rotate([90,0,0]){
             if(Show_Board_Mockup && Board_Type != "none"){
                 // Involucro semitrasparente (%) per ispezione interna visiva a raggi X
-                %frontplate(Units, rpi_front_sq, rpi_front_rd, [], screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
+                %frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
                 %cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
                 %lid(eff_depth, Units, [screw_pos], [screw_pos]);
                 %back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, []);
                 %handle(Units, false);   
                 board_3d_mockup(Board_Type, pi_offset_x, eff_depth, Include_SSD, Include_StepDown, StepDown_Type);
+                if(Enable_OLED){
+                    oled_3d_mockup(oled_cx, oled_cy, OLED_Model);
+                }
             } else {
-                frontplate(Units, rpi_front_sq, rpi_front_rd, [], screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
+                frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
                 cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
                 lid(eff_depth, Units, [screw_pos], [screw_pos]);
                 back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, []);
@@ -330,12 +377,15 @@ module go(){
     }else if(Part=="board_preview"){
         // Visualizzazione 3D standalone della scheda e degli accessori interni per ispezione
         rotate([90,0,0]){
-            %cabinet(Depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
-            board_3d_mockup(Board_Type, pi_offset_x, Depth, Include_SSD, Include_StepDown, StepDown_Type);
+            %cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
+            board_3d_mockup(Board_Type, pi_offset_x, eff_depth, Include_SSD, Include_StepDown, StepDown_Type);
+            if(Enable_OLED){
+                oled_3d_mockup(oled_cx, oled_cy, OLED_Model);
+            }
         }
     }else if(Part=="frontplate" || Part=="b" || Part=="FrontPlate"){
         // Pronto per la stampa 3D (piatto sul piano di stampa XY)
-        frontplate(Units, rpi_front_sq, rpi_front_rd, [], screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
+        frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
     }else if(Part=="cabinet" || Part=="c" || Part=="Cabinet"){
         // Corpo scatola: se Show_Board_Mockup e attivo, mostra anche la scheda e gli accessori montati all'interno!
         cabinet(Depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
@@ -1758,6 +1808,42 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
                 color([0.15, 0.55, 0.25]){ cube([17, 1.6, 11]); }
                 color([0.2, 0.2, 0.2]){ translate([5, 1.6, 2.5]){ cube([6, 3, 6]); } }
             }
+        }
+    }
+}
+
+// Simulazione 3D del modulo Display OLED I2C montato sul retro del pannello frontale
+module oled_3d_mockup(cx, cy, model="oled_096_rect"){
+    pcb_w = (model == "oled_091_wide") ? 38.0 :
+            (model == "oled_130_rect") ? 35.4 :
+            (model == "oled_150_sq")   ? 42.0 : 27.3;
+    pcb_h = (model == "oled_091_wide") ? 12.0 :
+            (model == "oled_130_rect") ? 33.5 :
+            (model == "oled_150_sq")   ? 42.0 : 27.8;
+    scr_w = (model == "oled_091_wide") ? 26.0 :
+            (model == "oled_130_rect") ? 31.5 :
+            (model == "oled_150_sq")   ? 29.0 : 23.5;
+    scr_h = (model == "oled_091_wide") ? 9.0 :
+            (model == "oled_130_rect") ? 17.5 :
+            (model == "oled_150_sq")   ? 29.0 : 13.5;
+
+    z_pcb = gauge + 3.5; // Appoggiato sui distanziali posteriori della frontplate
+    translate([cx, cy, z_pcb]){
+        // PCB Blu del modulo OLED I2C
+        color([0.10, 0.30, 0.70]){
+            translate([-pcb_w/2, -pcb_h/2, 0]){ cube([pcb_w, pcb_h, 1.6]); }
+        }
+        // Vetro scuro del display rivolto verso il fronte (-Z)
+        color([0.08, 0.08, 0.10]){
+            translate([-scr_w/2, -scr_h/2, -1.6]){ cube([scr_w, scr_h, 1.6]); }
+        }
+        // Area attiva ciano/azzurra simulata
+        color([0.10, 0.75, 0.95]){
+            translate([-(scr_w-3)/2, -(scr_h-3)/2, -1.7]){ cube([scr_w-3, scr_h-3, 0.15]); }
+        }
+        // Header I2C 4-pin (VCC, GND, SCL, SDA) verso l'interno
+        color([0.15, 0.15, 0.15]){
+            translate([-5, pcb_h/2 - 3.5, 1.6]){ cube([10, 2.5, 6.0]); }
         }
     }
 }
