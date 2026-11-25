@@ -274,13 +274,14 @@ module go(){
     // Unione di tutti i distanziali da montare sul fondo del cabinet
     all_pegs = concat(rpi_base_pegs, ssd_pegs, step_pegs);
 
-    // Tagli frontali: asola MicroSD o USB di servizio (non necessaria su Olimex LIME2 dove la MicroSD e interna)
-    sd_center_x = (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 27.3) :
+    // Tagli frontali: asola MicroSD o USB di servizio
+    sd_center_x = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 9.0) :
+                  (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 27.3) :
                   (Board_Type == "rpizero")      ? (20 + gauge_box + pi_offset_x + 15) :
                   (Board_Type == "rpipico")      ? (20 + gauge_box + pi_offset_x + 10.5) :
                   (20 + gauge_box + pi_offset_x + 28);
-    sd_w = (Board_Type == "rpipico") ? 12 : (Board_Type == "rpizero") ? 14 : 16;
-    rpi_front_sq = (Board_Type != "none" && Board_Type != "olimex_lime2") ? [
+    sd_w = (Board_Type == "rpipico") ? 12 : (Board_Type == "rpizero") ? 14 : (Board_Type == "olimex_lime2") ? 15 : 16;
+    rpi_front_sq = (Board_Type != "none") ? [
         [sd_center_x - sd_w/2, 2, sd_w, 4.5]
     ] : [];
 
@@ -1743,8 +1744,8 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
                 translate([w - 6.5, t, 26]){ cube([5.0, 6.0, 32]); }
             }
 
-            // Slot MicroSD sul lato inferiore
-            color([0.75, 0.75, 0.75]){ translate([23, -1.8, l - 18]){ cube([14, 1.8, 15]); } }
+            // Slot MicroSD sul lato inferiore anteriore (sotto Mini-USB OTG, a dx dell'HDMI guardando dal fronte)
+            color([0.75, 0.75, 0.75]){ translate([2.5, -1.8, -1.5]){ cube([13, 1.8, 15]); } }
 
             // LED di stato (PWR Rosso, LED1 Verde)
             color([0.9, 0.1, 0.1]){ translate([48, t, 14]){ cylinder(d=1.4, h=0.8, $fn=12); } }
