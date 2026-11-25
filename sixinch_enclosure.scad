@@ -97,6 +97,9 @@ Custom_Label_Offset_X = 0; // [-70:0.5:70]
 // Spostamento verticale fine della scritta in mm
 Custom_Label_Offset_Y = 0; // [-20:0.5:40]
 
+// Abilita l'asola frontale per accesso MicroSD sul pannello frontale
+Enable_Front_SD_Slot = false;
+
 /* [Posizionamento Accessori Interni (mm)] */
 // Orientamento connettori disco SSD 2.5"
 SSD_Orientation = "front_sata"; // [front_sata: Connettore SATA verso il fronte (consigliato per LIME2), rear_sata: Connettore SATA verso il retro]
@@ -310,7 +313,7 @@ module go(){
                   (Board_Type == "rpipico")      ? (20 + gauge_box + pi_offset_x + 10.5) :
                   (20 + gauge_box + pi_offset_x + 28);
     sd_w = (Board_Type == "rpipico") ? 12 : (Board_Type == "rpizero") ? 14 : (Board_Type == "olimex_lime2") ? 15 : 16;
-    rpi_front_sq = (Board_Type != "none") ? [
+    rpi_front_sq = (Enable_Front_SD_Slot && Board_Type != "none") ? [
         [sd_center_x - sd_w/2, 2, sd_w, 4.5]
     ] : [];
 
