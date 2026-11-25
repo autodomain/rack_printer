@@ -1892,7 +1892,13 @@ module oled_3d_mockup(cx, cy, model="oled_096_rect"){
         }
         // Header I2C 4-pin (VCC, GND, SCL, SDA) verso l'interno
         color([0.15, 0.15, 0.15]){
-            translate([-5, pcb_h/2 - 3.5, 1.6]){ cube([10, 2.5, 6.0]); }
+            translate([-5, pcb_h/2 - 2.5, 1.6]){ cube([10, 2.2, 6.0]); }
+        }
+    }
+    // Staffa posteriore di fissaggio OLED visibile nel mockup 3D
+    color([0.92, 0.72, 0.15]){
+        translate([cx, cy, z_pcb + 1.6]){
+            oled_clip_bracket(model);
         }
     }
 }
