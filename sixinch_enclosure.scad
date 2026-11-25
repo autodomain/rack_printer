@@ -987,19 +987,24 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
         }
     }
 
-    // Fibre ottiche simulate fino ai collarini sul pannello frontale
-    for(p = led_pairs){
-        lx = p[0];
-        fx = p[1];
-        color([0.20, 0.85, 1.00, 0.85]){
-            hull(){
-                translate([lx, y0 + t + 3.2, z_led - 3.2]){ sphere(d=fiber_d, $fn=12); }
-                translate([fx, 5.0, (z_led + z_front)/2]){ sphere(d=fiber_d, $fn=12); }
-            }
-            hull(){
-                translate([fx, 5.0, (z_led + z_front)/2]){ sphere(d=fiber_d, $fn=12); }
-                translate([fx, 5.0, 0.2]){ sphere(d=fiber_d, $fn=12); }
-            }
+    // Fibre ottiche simulate: partono direttamente dal LED dentro il supporto e arrivano dentro i collarini PWR/ACT sul frontale
+    for(idx = [0 : len(led_pairs) - 1]){
+        lx = led_pairs[idx][0];
+        fx = led_pairs[idx][1];
+        y_base = y0 + t + ((style == "single_screw") ? (idx * 2.3) : 0);
+        f_col = (idx == 0) ? [1.00, 0.25, 0.20] : [0.20, 1.00, 0.45];
+
+        p_start = [lx, y_base + 0.8, z_led];
+        p_exit  = [lx, y_base + 5.2, z_led - 4.2];
+        p_mid   = [(lx + fx)/2, (y_base + 5.2 + 5.0)/2 - 1.5, (z_led - 4.2 + z_front)/2];
+        p_col   = [fx, 5.0, z_front];
+        p_front = [fx, 5.0, -0.3];
+
+        color(f_col){
+            hull(){ translate(p_start){ sphere(d=fiber_d, $fn=12); } translate(p_exit){  sphere(d=fiber_d, $fn=12); } }
+            hull(){ translate(p_exit){  sphere(d=fiber_d, $fn=12); } translate(p_mid){   sphere(d=fiber_d, $fn=12); } }
+            hull(){ translate(p_mid){   sphere(d=fiber_d, $fn=12); } translate(p_col){   sphere(d=fiber_d, $fn=12); } }
+            hull(){ translate(p_col){   sphere(d=fiber_d, $fn=12); } translate(p_front){ sphere(d=fiber_d, $fn=12); } }
         }
     }
 }
