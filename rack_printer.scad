@@ -125,9 +125,9 @@ module go(){
 
     // Profondita effettiva automatica (compatta e non supera mai i 200mm totali del fondo del contenitore)
     auto_min_dp = (Board_Type == "olimex_lime2") ? (
-                      (Include_SSD && Include_StepDown) ? ((StepDown_Type == "Mini360") ? 122 : 132) :
-                      (Include_SSD || Include_StepDown) ? 115 : 105
-                  ) : (Include_SSD && Include_StepDown) ? 115 : 98;
+                      (Include_SSD && Include_StepDown) ? ((StepDown_Type == "Mini360") ? 130 : 140) :
+                      (Include_SSD || Include_StepDown) ? 120 : 105
+                  ) : (Include_SSD && Include_StepDown) ? 125 : 98;
     eff_depth = Auto_Depth ? min(200, max(Depth, auto_min_dp)) : min(200, Depth);
 
     // Coordinate Z distanziali dinamiche: allineano le porte retro a filo con la piastra posteriore (eff_depth)
@@ -190,9 +190,9 @@ module go(){
         ] : [];
 
     // Colonnine per disco SSD da 2.5" (Standard SFF-8201: fori distanziati 61.7mm x 76.6mm)
-    // SSD ruotato di 180 gradi: connettore SATA rivolto verso il fronte (verso i connettori interni LIME2)
-    ssd_x0 = (pi_offset_x > width/2) ? 14 : (width - 61.7 - 14);
-    ssd_z0 = eff_depth - 93.6;
+    // Posizionato tra la scheda e i pozzetti viti laterali (X_abs = 96..165.85mm) e arretrato dal retro per evitare collisioni con screwtrap
+    ssd_x0 = (pi_offset_x > width/2) ? (13 + 4.065) : (width - 61.7 - 16);
+    ssd_z0 = eff_depth - 103.0;
     ssd_pegs = (Board_Type != "none" && Include_SSD) ? [
         [ssd_x0,        ssd_z0,        6, 2.8, 5],
         [ssd_x0 + 61.7, ssd_z0,        6, 2.8, 5],
@@ -1656,8 +1656,8 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
 
     // --- ACCESSORIO 1: DISCO SSD DA 2.5 POLLICI (RUOTATO 180°: CONNETTORE SATA VERSO IL FRONTE) ---
     if(inc_ssd && (board_type != "none")){
-        ssd_x0_rel = (pi_ox > width/2) ? 14 : (width - 61.7 - 14);
-        ssd_z0_rel = dp - 93.6;
+        ssd_x0_rel = (pi_ox > width/2) ? (13 + 4.065) : (width - 61.7 - 16);
+        ssd_z0_rel = dp - 103.0;
         ssd_x = 20 + gauge_box + ssd_x0_rel - 4.065; // Fori centrati sui distanziali
         ssd_z = gauge + ssd_z0_rel - 9.4;            // Fori a 9.4mm dal lato connettore SATA (fronte)
         ssd_y = 5; // Appoggio sulle colonnine da 5mm
