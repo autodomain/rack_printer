@@ -125,6 +125,13 @@ Fiber_Diameter = 1.0; // [1.0: Fibra ottica 1.0 mm (Consigliata), 1.5: Fibra ott
 // Tipo di supporto per catturare la luce dei LED con fibra ottica
 LED_Guide_Style = "single_cap"; // [single_cap: Cappuccio Singolo (adesivo / colla a caldo - universale), single_screw: Braccetti Singoli a Vite su distanziale (senza colla - tutte le schede), dual_screw: Staffa Unica a Vite su distanziale (senza colla - 2 LED), pcb_clip: Clip a Scatto su Bordo PCB (senza colla - tutte le schede)]
 
+// Posizione dei LED sul pannello frontale (vista frontale)
+Front_LED_Pos = "board"; // [board: Sopra la scheda (predefinito), left: A sinistra (fronte sx), center: Al centro, right: A destra (fronte dx)]
+// Spostamento orizzontale fine dei LED frontali in mm
+Front_LED_Offset_X = 0; // [-80:0.5:80]
+// Spostamento verticale fine dei LED frontali in mm
+Front_LED_Offset_Y = 0; // [-8:0.5:30]
+
 /* [Dimensioni Principali (mm)] */
 // Larghezza totale rack in mm (Fissata a 200 mm)
 Rack_Width = 200; 
@@ -352,23 +359,26 @@ module go(){
     oled_pegs = [];
     all_front_sq = concat(rpi_front_sq, oled_sq);
 
-    // Fori per fibra ottica LED di stato (PWR sempre nella stessa posizione a x0+50; 5 fori su BBB)
-    led_y = 12.0;
-    pwr_x = 20 + gauge_box + pi_offset_x + 50.0;
-    led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 44.0) :
-             (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 34.0) :
-             (Board_Type == "rpizero")      ? (20 + gauge_box + pi_offset_x + 24.0) :
-             (Board_Type == "rpipico")      ? (20 + gauge_box + pi_offset_x + 14.0) :
-             (20 + gauge_box + pi_offset_x + 44.0);
+    // Fori per fibra ottica LED di stato (PWR sempre nella stessa posizione relativa; spostabili tramite Front_LED_Pos/Offset)
+    led_dx = ((Front_LED_Pos == "left")   ? ((Rack_Width - 45.0) - (20 + gauge_box + pi_offset_x + 50.0)) :
+              (Front_LED_Pos == "center") ? ((Rack_Width / 2)    - (20 + gauge_box + pi_offset_x + 50.0)) :
+              (Front_LED_Pos == "right")  ? (54.0                - (20 + gauge_box + pi_offset_x + 50.0)) : 0) + Front_LED_Offset_X;
+    led_y = 12.0 + Front_LED_Offset_Y;
+    pwr_x = 20 + gauge_box + pi_offset_x + 50.0 + led_dx;
+    led_x1 = ((Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 44.0) :
+              (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 34.0) :
+              (Board_Type == "rpizero")      ? (20 + gauge_box + pi_offset_x + 24.0) :
+              (Board_Type == "rpipico")      ? (20 + gauge_box + pi_offset_x + 14.0) :
+              (20 + gauge_box + pi_offset_x + 44.0)) + led_dx;
     led_x2 = pwr_x;
     rpi_front_rd = (Board_Type != "none" && Enable_LED_Guide) ? (
         (Board_Type == "rpizero" || Board_Type == "rpipico") ? [
             [led_x1, led_y, fiber_hole]
         ] : (Board_Type == "bbb" || Board_Type == "bbb_cape") ? [
-            [20 + gauge_box + pi_offset_x + 34.0, led_y, fiber_hole],
-            [20 + gauge_box + pi_offset_x + 37.0, led_y, fiber_hole],
-            [20 + gauge_box + pi_offset_x + 40.0, led_y, fiber_hole],
-            [20 + gauge_box + pi_offset_x + 43.0, led_y, fiber_hole],
+            [20 + gauge_box + pi_offset_x + 34.0 + led_dx, led_y, fiber_hole],
+            [20 + gauge_box + pi_offset_x + 37.0 + led_dx, led_y, fiber_hole],
+            [20 + gauge_box + pi_offset_x + 40.0 + led_dx, led_y, fiber_hole],
+            [20 + gauge_box + pi_offset_x + 43.0 + led_dx, led_y, fiber_hole],
             [pwr_x, led_y, fiber_hole]
         ] : [
             [led_x1, led_y, fiber_hole],
@@ -604,13 +614,16 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
 
         // Incisione scritte LED sulla facciata frontale sopra i fori della fibra
         if(Board_Type != "none" && Enable_LED_Guide){
-            led_y = 12.0;
-            pwr_x = 20 + gauge_box + pi_ox + 50.0;
-            led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 44.0) :
-                     (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 38.5) :
-                     (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24.0) :
-                     (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14.0) :
-                     (20 + gauge_box + pi_ox + 44.0);
+            led_dx = ((Front_LED_Pos == "left")   ? ((Rack_Width - 45.0) - (20 + gauge_box + pi_ox + 50.0)) :
+                      (Front_LED_Pos == "center") ? ((Rack_Width / 2)    - (20 + gauge_box + pi_ox + 50.0)) :
+                      (Front_LED_Pos == "right")  ? (54.0                - (20 + gauge_box + pi_ox + 50.0)) : 0) + Front_LED_Offset_X;
+            led_y = 12.0 + Front_LED_Offset_Y;
+            pwr_x = 20 + gauge_box + pi_ox + 50.0 + led_dx;
+            led_x1 = ((Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 44.0) :
+                      (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 38.5) :
+                      (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24.0) :
+                      (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14.0) :
+                      (20 + gauge_box + pi_ox + 44.0)) + led_dx;
             led_x2 = pwr_x;
             txt1 = (Board_Type == "bbb" || Board_Type == "bbb_cape") ? "USR0..3" : "ACT";
             translate([led_x1, led_y + 3.5, -0.01]){
@@ -634,17 +647,20 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
 
     // Tubetti di ritenzione e guida della fibra ottica sul retro del pannello frontale
     if(Board_Type != "none" && Enable_LED_Guide){
-        led_y = 12.0;
-        pwr_x = 20 + gauge_box + pi_ox + 50.0;
-        led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 44.0) :
-                 (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24.0) :
-                 (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14.0) :
-                 (20 + gauge_box + pi_ox + 44.0);
+        led_dx = ((Front_LED_Pos == "left")   ? ((Rack_Width - 45.0) - (20 + gauge_box + pi_ox + 50.0)) :
+                  (Front_LED_Pos == "center") ? ((Rack_Width / 2)    - (20 + gauge_box + pi_ox + 50.0)) :
+                  (Front_LED_Pos == "right")  ? (54.0                - (20 + gauge_box + pi_ox + 50.0)) : 0) + Front_LED_Offset_X;
+        led_y = 12.0 + Front_LED_Offset_Y;
+        pwr_x = 20 + gauge_box + pi_ox + 50.0 + led_dx;
+        led_x1 = ((Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 44.0) :
+                  (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24.0) :
+                  (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14.0) :
+                  (20 + gauge_box + pi_ox + 44.0)) + led_dx;
         led_x2 = pwr_x;
         collar_d = max(3.0, fiber_hole + 1.8);
         if(Board_Type == "bbb" || Board_Type == "bbb_cape"){
             // Blocchetto unico a 4 fori per USR0..3 + collarino separato per PWR
-            translate([20 + gauge_box + pi_ox + 38.5, led_y, gauge]){
+            translate([20 + gauge_box + pi_ox + 38.5 + led_dx, led_y, gauge]){
                 difference(){
                     translate([-6.5, -1.8, 0]){ cube([13.0, 3.6, 5]); }
                     for(dx = [-4.5, -1.5, 1.5, 4.5]){
@@ -985,22 +1001,26 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     led_x2 = (board_type == "olimex_lime2") ? (x0 + 41.5) :
              (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 43.2) : (x0 + 7.5);
 
-    front_x1 = (board_type == "olimex_lime2") ? (x0 + 44.0) :
-               (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 34.0) :
-               (board_type == "rpizero") ? (x0 + 24.0) :
-               (board_type == "rpipico") ? (x0 + 14.0) : (x0 + 44.0);
-    front_x2 = x0 + 50.0; // PWR sempre nella stessa posizione sul frontale
-    front_y = 12.0;
+    led_dx = ((Front_LED_Pos == "left")   ? ((Rack_Width - 45.0) - (x0 + 50.0)) :
+              (Front_LED_Pos == "center") ? ((Rack_Width / 2)    - (x0 + 50.0)) :
+              (Front_LED_Pos == "right")  ? (54.0                - (x0 + 50.0)) : 0) + Front_LED_Offset_X;
+
+    front_x1 = ((board_type == "olimex_lime2") ? (x0 + 44.0) :
+                (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 34.0) :
+                (board_type == "rpizero") ? (x0 + 24.0) :
+                (board_type == "rpipico") ? (x0 + 14.0) : (x0 + 44.0)) + led_dx;
+    front_x2 = x0 + 50.0 + led_dx; // PWR sempre nella stessa posizione relativa (spostabile da Front_LED_Pos/Offset)
+    front_y = 12.0 + Front_LED_Offset_Y;
 
     z_front = gauge + 4.5;
     led_pairs = (board_type == "rpizero" || board_type == "rpipico") ?
                 [[led_x1, front_x1, z_led]] :
                 (board_type == "bbb" || board_type == "bbb_cape") ? [
-                    [x0 + 4.0,  x0 + 34.0, z_led],
-                    [x0 + 6.4,  x0 + 37.0, z_led],
-                    [x0 + 8.8,  x0 + 40.0, z_led],
-                    [x0 + 11.2, x0 + 43.0, z_led],
-                    [x0 + 39.5, front_x2,  z_led] // PWR D1 vicino al jack 5V P1 -> foro PWR a x0+50
+                    [x0 + 4.0,  x0 + 34.0 + led_dx, z_led],
+                    [x0 + 6.4,  x0 + 37.0 + led_dx, z_led],
+                    [x0 + 8.8,  x0 + 40.0 + led_dx, z_led],
+                    [x0 + 11.2, x0 + 43.0 + led_dx, z_led],
+                    [x0 + 39.5, front_x2,           z_led] // PWR D1 vicino al jack 5V P1 -> foro PWR
                 ] :
                 [[led_x1, front_x1, z_led], [led_x2, front_x2, z_led2]];
 
