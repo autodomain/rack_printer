@@ -290,18 +290,8 @@ module go(){
     oled_sq = Enable_OLED ? [
         [oled_cx - oled_win_w/2, oled_cy - oled_win_h/2, oled_win_w, oled_win_h]
     ] : [];
-    oled_pegs = Enable_OLED ? (
-        (OLED_Model == "oled_091_wide") ? [
-            // Il 0.91" spesso non ha fori sul PCB: 2 colonnine laterali esterne (interasse 45mm) per staffa oled_clip
-            [oled_cx - 22.5, oled_cy, 5.5, 2.1, 3.5],
-            [oled_cx + 22.5, oled_cy, 5.5, 2.1, 3.5]
-        ] : [
-            [oled_cx - oled_hole_dx/2, oled_cy - oled_hole_dy/2, 4.5, 1.8, 3.5],
-            [oled_cx + oled_hole_dx/2, oled_cy - oled_hole_dy/2, 4.5, 1.8, 3.5],
-            [oled_cx - oled_hole_dx/2, oled_cy + oled_hole_dy/2, 4.5, 1.8, 3.5],
-            [oled_cx + oled_hole_dx/2, oled_cy + oled_hole_dy/2, 4.5, 1.8, 3.5]
-        ]
-    ) : [];
+    // Fissaggio integrato a incastro/slitta direttamente nel pannello frontale (senza viti)
+    oled_pegs = [];
     all_front_sq = concat(rpi_front_sq, oled_sq);
 
     // Fori per fibra ottica LED di stato
@@ -559,7 +549,7 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
         }
     }
     
-    // Culla / cornice di centraggio e ritenzione sul retro per Display OLED I2C (utile specialmente per 0.91" senza fori)
+    // Culla / slitta a incastro integrata sul retro per Display OLED I2C (senza viti, con apertura contatti sul lato corto)
     if(Enable_OLED){
         o_pcb_w = (OLED_Model == "oled_091_wide") ? 38.0 :
                   (OLED_Model == "oled_130_rect") ? 35.4 :
@@ -572,19 +562,33 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
         o_cy = (u * unit) / 2 + OLED_Offset_Y;
         cw = o_pcb_w + 0.6;
         ch = o_pcb_h + 0.6;
-        wall = 1.2;
+        wall = 1.4;
         translate([o_cx, o_cy, gauge]){
             difference(){
-                translate([-(cw/2 + wall), -(ch/2 + wall), 0]){
-                    cube([cw + 2*wall, ch + 2*wall, 2.5]);
+                union(){
+                    // Cornice perimetrale di guida PCB
+                    translate([-(cw/2 + wall), -(ch/2 + wall), 0]){
+                        cube([cw + 2*wall, ch + 2*wall, 2.8]);
+                    }
                 }
+                // Vano interno PCB
                 translate([-cw/2, -ch/2, -0.5]){
-                    cube([cw, ch, 3.5]);
+                    cube([cw, ch, 3.8]);
                 }
-                // Apertura sul lato per passaggio saldature/pin header I2C (4 pin)
-                translate([-8, -ch/2 - wall - 0.5, -0.5]){
-                    cube([16, wall + 1.5, 3.5]);
+                // Apertura sul LATO CORTO (sinistra) per passaggio contatti elettrici / header I2C 4-pin
+                translate([-(cw/2 + wall + 0.5), -5.5, -0.5]){
+                    cube([wall + 1.5, 11.0, 3.8]);
                 }
+            }
+            // Due labbri di ritenzione elastica a scatto (snap-in) sui lati lunghi (senza viti, spessore 0.8mm con invito a 45°)
+            for(sy = [-1, 1]){
+                translate([-cw/4, sy * (ch/2 - 0.55), 1.8]){
+                    cube([cw/2, 1.1, 1.0]);
+                }
+            }
+            // Fermo elastico a scatto sul lato corto opposto ai contatti
+            translate([cw/2 - 0.45, -4.0, 1.8]){
+                cube([0.9, 8.0, 1.0]);
             }
         }
     }
@@ -1876,7 +1880,7 @@ module oled_3d_mockup(cx, cy, model="oled_096_rect"){
             (model == "oled_130_rect") ? 17.5 :
             (model == "oled_150_sq")   ? 29.0 : 13.5;
 
-    z_pcb = gauge + 3.5; // Appoggiato sui distanziali posteriori della frontplate
+    z_pcb = gauge; // Appoggiato direttamente dietro la frontplate dentro la culla a scatto (senza viti)
     translate([cx, cy, z_pcb]){
         // PCB Blu del modulo OLED I2C
         color([0.10, 0.30, 0.70]){
@@ -1890,15 +1894,13 @@ module oled_3d_mockup(cx, cy, model="oled_096_rect"){
         color([0.10, 0.75, 0.95]){
             translate([-(scr_w-3)/2, -(scr_h-3)/2, -1.7]){ cube([scr_w-3, scr_h-3, 0.15]); }
         }
-        // Header I2C 4-pin (VCC, GND, SCL, SDA) verso l'interno
+        // Header I2C 4-pin (VCC, GND, SCL, SDA) posizionato sul LATO CORTO verso l'interno
         color([0.15, 0.15, 0.15]){
-            translate([-5, pcb_h/2 - 2.5, 1.6]){ cube([10, 2.2, 6.0]); }
-        }
-    }
-    // Staffa posteriore di fissaggio OLED visibile nel mockup 3D
-    color([0.92, 0.72, 0.15]){
-        translate([cx, cy, z_pcb + 1.6]){
-            oled_clip_bracket(model);
+            if(model == "oled_091_wide"){
+                translate([-pcb_w/2 + 0.5, -5.0, 1.6]){ cube([2.5, 10.0, 6.0]); }
+            } else {
+                translate([-5.0, pcb_h/2 - 3.0, 1.6]){ cube([10.0, 2.5, 6.0]); }
+            }
         }
     }
 }
