@@ -1067,9 +1067,10 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
         y_base = y0 + t + ((style == "single_screw") ? (idx * 2.3) : 0);
         f_col = (idx == len(led_pairs) - 1 && len(led_pairs) > 1) ? [1.00, 0.25, 0.20] : [0.20, 0.85, 1.00];
 
+        is_bbb_usr = ((board_type == "bbb" || board_type == "bbb_cape") && idx < 4);
         p_start = [lx, y_base + 0.8, zl];
-        p_exit  = [lx, y_base + 5.2, zl - 4.2];
-        p_mid   = [(lx + fx)/2, (y_base + 5.2 + front_y)/2 - 0.5, (zl - 4.2 + z_front)/2];
+        p_exit  = is_bbb_usr ? [lx + 4.2, y_base + 5.2, zl] : [lx, y_base + 5.2, zl - 4.2];
+        p_mid   = [(p_exit[0] + fx)/2, (y_base + 5.2 + front_y)/2 - 0.5, (p_exit[2] + z_front)/2];
         p_col   = [fx, front_y, z_front];
         p_front = [fx, front_y, -0.6];
 
