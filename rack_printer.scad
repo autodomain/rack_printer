@@ -943,12 +943,12 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
                 [[led_x1, front_x1]] :
                 [[led_x1, front_x1], [led_x2, front_x2]];
 
-    // Render del supporto scelto
+    // Render del supporto scelto (rotate([-90,0,0]) porta +Z su +Y in alto e +Y su -Z verso il fronte)
     if(style == "dual_screw"){
         p0 = _led_rel_xy(board_type, 0);
         color([0.92, 0.72, 0.15]){
             translate([led_x1 - p0[0], y0 + t, z_led + p0[1]]){
-                rotate([90, 0, 0]){
+                rotate([-90, 0, 0]){
                     light_guide_dual_screw(fiber_d, board_type);
                 }
             }
@@ -959,7 +959,7 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
             rel = _led_rel_xy(board_type, idx);
             color([0.92, 0.72, 0.15]){
                 translate([px - rel[0], y0 + t + idx * 2.3, z_led + rel[1]]){
-                    rotate([90, 0, 0]){
+                    rotate([-90, 0, 0]){
                         light_guide_single_screw(fiber_d, board_type, idx);
                     }
                 }
@@ -969,7 +969,7 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
         for(p = led_pairs){
             color([0.92, 0.72, 0.15]){
                 translate([p[0], y0 + t, z_led - 6.5]){
-                    rotate([90, 0, 0]){
+                    rotate([-90, 0, 0]){
                         light_guide_pcb_clip(fiber_d, t, 6.5);
                     }
                 }
@@ -979,7 +979,7 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
         for(p = led_pairs){
             color([0.92, 0.72, 0.15]){
                 translate([p[0], y0 + t, z_led]){
-                    rotate([90, 0, 0]){
+                    rotate([-90, 0, 0]){
                         light_guide_single(fiber_d);
                     }
                 }
