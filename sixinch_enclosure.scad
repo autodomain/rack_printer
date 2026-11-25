@@ -79,6 +79,24 @@ Reset_Button_Offset_X = 0; // [-60:0.5:60]
 // Spostamento verticale fine pulsante reset in mm
 Reset_Button_Offset_Y = 0; // [-15:0.5:30]
 
+/* [Scritta Utente Frontale] */
+// Abilita scritta personalizzata sul pannello frontale
+Enable_Custom_Label = false;
+// Testo della scritta utente
+Custom_Label_Text = "NODE 01";
+// Stile della scritta (incisa o in rilievo)
+Custom_Label_Mode = "engrave"; // [engrave: Incisa (scavata nel pannello), emboss: In rilievo (sporgente sul fronte)]
+// Profondita / sporgenza della scritta in mm
+Custom_Label_Depth = 0.6; // [0.2:0.1:2.5]
+// Dimensione carattere in mm
+Custom_Label_Size = 6.0; // [2.5:0.5:18.0]
+// Posizione principale della scritta (vista frontale)
+Custom_Label_Pos = "center"; // [center: Al centro, left: A sinistra (fronte sx), right: A destra (fronte dx)]
+// Spostamento orizzontale fine della scritta in mm
+Custom_Label_Offset_X = 0; // [-70:0.5:70]
+// Spostamento verticale fine della scritta in mm
+Custom_Label_Offset_Y = 0; // [-20:0.5:40]
+
 /* [Posizionamento Accessori Interni (mm)] */
 // Orientamento connettori disco SSD 2.5"
 SSD_Orientation = "front_sata"; // [front_sata: Connettore SATA verso il fronte (consigliato per LIME2), rear_sata: Connettore SATA verso il retro]
@@ -552,6 +570,21 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
             }
         }
 
+        // Scritta utente personalizzata (modalita incisa)
+        if(Enable_Custom_Label && Custom_Label_Mode == "engrave" && Custom_Label_Text != ""){
+            lbl_x = ((Custom_Label_Pos == "right") ? 45.0 :
+                     (Custom_Label_Pos == "left")  ? (Rack_Width - 45.0) :
+                     (Rack_Width / 2)) + Custom_Label_Offset_X;
+            lbl_y = (u * unit) / 2 + Custom_Label_Offset_Y;
+            translate([lbl_x, lbl_y, -0.01]){
+                linear_extrude(height=Custom_Label_Depth + 0.01){
+                    mirror([1,0,0]){
+                        text(Custom_Label_Text, size=Custom_Label_Size, halign="center", valign="center", font="Liberation Sans:style=Bold");
+                    }
+                }
+            }
+        }
+
         // Incisione scritte LED sulla facciata frontale sopra i fori della fibra
         if(Board_Type != "none" && Enable_LED_Guide){
             led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 48) :
@@ -681,6 +714,21 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
             } else {
                 translate([-4.0, -(ch/2 + 0.45), 1.8]){
                     cube([8.0, 0.9, 1.0]);
+                }
+            }
+        }
+    }
+
+    // Scritta utente personalizzata (modalita in rilievo sul fronte -Z)
+    if(Enable_Custom_Label && Custom_Label_Mode == "emboss" && Custom_Label_Text != ""){
+        lbl_x_e = ((Custom_Label_Pos == "right") ? 45.0 :
+                   (Custom_Label_Pos == "left")  ? (Rack_Width - 45.0) :
+                   (Rack_Width / 2)) + Custom_Label_Offset_X;
+        lbl_y_e = (u * unit) / 2 + Custom_Label_Offset_Y;
+        translate([lbl_x_e, lbl_y_e, -Custom_Label_Depth]){
+            linear_extrude(height=Custom_Label_Depth + 0.01){
+                mirror([1,0,0]){
+                    text(Custom_Label_Text, size=Custom_Label_Size, halign="center", valign="center", font="Liberation Sans:style=Bold");
                 }
             }
         }
