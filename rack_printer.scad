@@ -352,21 +352,22 @@ module go(){
     oled_pegs = [];
     all_front_sq = concat(rpi_front_sq, oled_sq);
 
-    // Fori per fibra ottica LED di stato (allineati ai LED reali di ogni scheda)
+    // Fori per fibra ottica LED di stato (tutti sul frontale per massima visibilita)
+    led_y = 12.0;
     led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 48) :
              (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 36) :
              (Board_Type == "rpizero")      ? (20 + gauge_box + pi_offset_x + 24) :
-             (Board_Type == "rpipico")      ? (20 + gauge_box + pi_offset_x + 6.5) :
-             (20 + gauge_box + pi_offset_x + 3.5);
+             (Board_Type == "rpipico")      ? (20 + gauge_box + pi_offset_x + 14) :
+             (20 + gauge_box + pi_offset_x + 14);
     led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 54) :
              (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 43.2) :
-             (20 + gauge_box + pi_offset_x + 7.5);
+             (20 + gauge_box + pi_offset_x + 20);
     rpi_front_rd = (Board_Type != "none" && Enable_LED_Guide) ? (
         (Board_Type == "rpizero" || Board_Type == "rpipico") ? [
-            [led_x1, 5, fiber_hole]
+            [led_x1, led_y, fiber_hole]
         ] : [
-            [led_x1, 5, fiber_hole],
-            [led_x2, 5, fiber_hole]
+            [led_x1, led_y, fiber_hole],
+            [led_x2, led_y, fiber_hole]
         ]
     ) : [];
 
@@ -599,16 +600,17 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
 
         // Incisione scritte LED sulla facciata frontale sopra i fori della fibra
         if(Board_Type != "none" && Enable_LED_Guide){
+            led_y = 12.0;
             led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 48) :
                      (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 36) :
                      (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24) :
-                     (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 6.5) :
-                     (20 + gauge_box + pi_ox + 3.5);
+                     (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14) :
+                     (20 + gauge_box + pi_ox + 14);
             led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 54) :
                      (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 43.2) :
-                     (20 + gauge_box + pi_ox + 7.5);
+                     (20 + gauge_box + pi_ox + 20);
             txt1 = (Board_Type == "bbb" || Board_Type == "bbb_cape") ? "USR" : "ACT";
-            translate([led_x1, 8.5, -0.01]){
+            translate([led_x1, led_y + 3.5, -0.01]){
                 linear_extrude(0.6){
                     mirror([1, 0, 0]){
                         text(txt1, size=1.4, halign="center", valign="center", font="Liberation Sans:style=Bold");
@@ -616,7 +618,7 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
                 }
             }
             if(Board_Type != "rpizero" && Board_Type != "rpipico"){
-                translate([led_x2, 8.5, -0.01]){
+                translate([led_x2, led_y + 3.5, -0.01]){
                     linear_extrude(0.6){
                         mirror([1, 0, 0]){
                             text("PWR", size=1.4, halign="center", valign="center", font="Liberation Sans:style=Bold");
@@ -629,23 +631,24 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
 
     // Tubetti di ritenzione e guida della fibra ottica sul retro del pannello frontale
     if(Board_Type != "none" && Enable_LED_Guide){
+        led_y = 12.0;
         led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 48) :
                  (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 36) :
                  (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24) :
-                 (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 6.5) :
-                 (20 + gauge_box + pi_ox + 3.5);
+                 (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14) :
+                 (20 + gauge_box + pi_ox + 14);
         led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 54) :
                  (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 43.2) :
-                 (20 + gauge_box + pi_ox + 7.5);
+                 (20 + gauge_box + pi_ox + 20);
         collar_d = max(3.0, fiber_hole + 1.8);
-        translate([led_x1, 5, gauge]){
+        translate([led_x1, led_y, gauge]){
             difference(){
                 cylinder(d=collar_d, h=5);
                 translate([0,0,-0.5]){ cylinder(d=fiber_hole, h=6); }
             }
         }
         if(Board_Type != "rpizero" && Board_Type != "rpipico"){
-            translate([led_x2, 5, gauge]){
+            translate([led_x2, led_y, gauge]){
                 difference(){
                     cylinder(d=collar_d, h=5);
                     translate([0,0,-0.5]){ cylinder(d=fiber_hole, h=6); }
@@ -934,8 +937,13 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     led_x2 = (board_type == "olimex_lime2") ? (x0 + 54.0) :
              (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 43.2) : (x0 + 7.5);
 
-    front_x1 = led_x1;
-    front_x2 = led_x2;
+    front_x1 = (board_type == "olimex_lime2") ? (x0 + 48.0) :
+               (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 36.0) :
+               (board_type == "rpizero") ? (x0 + 24.0) :
+               (board_type == "rpipico") ? (x0 + 14.0) : (x0 + 14.0);
+    front_x2 = (board_type == "olimex_lime2") ? (x0 + 54.0) :
+               (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 43.2) : (x0 + 20.0);
+    front_y = 12.0;
 
     z_front = gauge + 4.5;
     led_pairs = (board_type == "rpizero" || board_type == "rpipico") ?
@@ -995,15 +1003,17 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
 
         p_start = [lx, y_base + 0.8, z_led];
         p_exit  = [lx, y_base + 5.2, z_led - 4.2];
-        p_mid   = [(lx + fx)/2, (y_base + 5.2 + 5.0)/2 - 1.5, (z_led - 4.2 + z_front)/2];
-        p_col   = [fx, 5.0, z_front];
-        p_front = [fx, 5.0, -0.3];
+        p_mid   = [(lx + fx)/2, (y_base + 5.2 + front_y)/2 - 0.5, (z_led - 4.2 + z_front)/2];
+        p_col   = [fx, front_y, z_front];
+        p_front = [fx, front_y, -0.6];
 
         color(f_col){
             hull(){ translate(p_start){ sphere(d=fiber_d, $fn=12); } translate(p_exit){  sphere(d=fiber_d, $fn=12); } }
             hull(){ translate(p_exit){  sphere(d=fiber_d, $fn=12); } translate(p_mid){   sphere(d=fiber_d, $fn=12); } }
             hull(){ translate(p_mid){   sphere(d=fiber_d, $fn=12); } translate(p_col){   sphere(d=fiber_d, $fn=12); } }
             hull(){ translate(p_col){   sphere(d=fiber_d, $fn=12); } translate(p_front){ sphere(d=fiber_d, $fn=12); } }
+            // Punta luminosa visibile sulla facciata frontale
+            translate([fx, front_y, -0.8]){ cylinder(d=fiber_d + 0.8, h=1.0, $fn=16); }
         }
     }
 }
