@@ -1,0 +1,6 @@
+*.stl
+*.png
+*.echo
+*.bak
+_diag*
+_t*
