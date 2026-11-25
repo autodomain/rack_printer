@@ -45,8 +45,8 @@ StepDown_Type = "LM2596"; // [LM2596: Modulo LM2596 / LM2596S (fori 31.5x15mm), 
 
 // Abilita finestra e colonnine M2 sul pannello frontale per display OLED I2C
 Enable_OLED = false;
-// Modello di display OLED I2C (rettangolare o quadrato)
-OLED_Model = "oled_096_rect"; // [oled_096_rect: Rettangolare 0.96 poll. 128x64 (23.5x13.5mm), oled_091_wide: Rettangolare 0.91 poll. 128x32 (26x9mm), oled_130_rect: Rettangolare 1.3 poll. 128x64 (31.5x17.5mm), oled_150_sq: Quadrato 1.5 poll. 128x128 (29x29mm - cons. 3U)]
+// Modello di display (OLED I2C o LCD classico 16x2 / 20x4)
+OLED_Model = "oled_096_rect"; // [oled_096_rect: OLED 0.96 poll. 128x64 (23.5x13.5mm), oled_091_wide: OLED 0.91 poll. 128x32 (26x9mm), oled_130_rect: OLED 1.3 poll. 128x64 (31.5x17.5mm), oled_150_sq: OLED 1.5 poll. 128x128 (29x29mm - cons. 3U), lcd_1602: LCD 2x16 classico 1602 (72x25mm), lcd_2004: LCD 4x20 classico 2004 (97.5x40.5mm - cons. 2U)]
 // Posizione del display OLED sul pannello frontale
 OLED_Position = "right"; // [right: A destra (sopra SSD), center: Al centro, left: A sinistra (lato scheda)]
 // Spostamento orizzontale fine del display OLED in mm
@@ -285,19 +285,27 @@ module go(){
         [sd_center_x - sd_w/2, 2, sd_w, 4.5]
     ] : [];
 
-    // Finestra e 4 colonnine M2 sul pannello frontale per Display OLED I2C
+    // Finestra e culla integrata sul pannello frontale per Display OLED I2C / LCD 16x2 / 20x4
     oled_win_w = (OLED_Model == "oled_091_wide") ? 26.0 :
                  (OLED_Model == "oled_130_rect") ? 31.5 :
-                 (OLED_Model == "oled_150_sq")   ? 29.0 : 23.5;
+                 (OLED_Model == "oled_150_sq")   ? 29.0 :
+                 (OLED_Model == "lcd_1602")      ? 72.0 :
+                 (OLED_Model == "lcd_2004")      ? 97.5 : 23.5;
     oled_win_h = (OLED_Model == "oled_091_wide") ? 9.0 :
                  (OLED_Model == "oled_130_rect") ? 17.5 :
-                 (OLED_Model == "oled_150_sq")   ? 29.0 : 13.5;
+                 (OLED_Model == "oled_150_sq")   ? 29.0 :
+                 (OLED_Model == "lcd_1602")      ? 25.0 :
+                 (OLED_Model == "lcd_2004")      ? 40.5 : 13.5;
     oled_hole_dx = (OLED_Model == "oled_091_wide") ? 33.0 :
                    (OLED_Model == "oled_130_rect") ? 30.5 :
-                   (OLED_Model == "oled_150_sq")   ? 36.0 : 23.0;
+                   (OLED_Model == "oled_150_sq")   ? 36.0 :
+                   (OLED_Model == "lcd_1602")      ? 75.0 :
+                   (OLED_Model == "lcd_2004")      ? 93.0 : 23.0;
     oled_hole_dy = (OLED_Model == "oled_091_wide") ? 0.0 :
                    (OLED_Model == "oled_130_rect") ? 28.5 :
-                   (OLED_Model == "oled_150_sq")   ? 36.0 : 23.0;
+                   (OLED_Model == "oled_150_sq")   ? 36.0 :
+                   (OLED_Model == "lcd_1602")      ? 31.0 :
+                   (OLED_Model == "lcd_2004")      ? 55.0 : 23.0;
     oled_cx = ((OLED_Position == "center") ? (Rack_Width / 2) :
                (OLED_Position == "left")   ? 60 : 135) + OLED_Offset_X;
     oled_cy = (Units * unit) / 2 + OLED_Offset_Y;
@@ -579,14 +587,18 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
         }
     }
     
-    // Culla / slitta a incastro integrata sul retro per Display OLED I2C (senza viti, con apertura contatti sul lato corto)
+    // Culla / slitta a incastro integrata sul retro per Display OLED I2C o LCD (senza viti, con apertura contatti)
     if(Enable_OLED){
         o_pcb_w = (OLED_Model == "oled_091_wide") ? 38.0 :
                   (OLED_Model == "oled_130_rect") ? 35.4 :
-                  (OLED_Model == "oled_150_sq")   ? 42.0 : 27.3;
+                  (OLED_Model == "oled_150_sq")   ? 42.0 :
+                  (OLED_Model == "lcd_1602")      ? 80.0 :
+                  (OLED_Model == "lcd_2004")      ? 98.0 : 27.3;
         o_pcb_h = (OLED_Model == "oled_091_wide") ? 12.0 :
                   (OLED_Model == "oled_130_rect") ? 33.5 :
-                  (OLED_Model == "oled_150_sq")   ? 42.0 : 27.8;
+                  (OLED_Model == "oled_150_sq")   ? 42.0 :
+                  (OLED_Model == "lcd_1602")      ? 36.0 :
+                  (OLED_Model == "lcd_2004")      ? 60.0 : 27.8;
         o_cx = ((OLED_Position == "center") ? (Rack_Width / 2) :
                 (OLED_Position == "left")   ? 60 : 135) + OLED_Offset_X;
         o_cy = (u * unit) / 2 + OLED_Offset_Y;
@@ -605,8 +617,8 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
                 translate([-cw/2, -ch/2, -0.5]){
                     cube([cw, ch, 3.8]);
                 }
-                // Apertura per passaggio contatti elettrici / header I2C 4-pin (a sx guardando dal fronte = +X per 0.91", in alto = +Y per gli altri)
-                if(OLED_Model == "oled_091_wide"){
+                // Apertura per passaggio contatti elettrici / header I2C 4-pin (a sx guardando dal fronte = +X per 0.91" e LCD, in alto = +Y per gli altri OLED)
+                if(OLED_Model == "oled_091_wide" || OLED_Model == "lcd_1602" || OLED_Model == "lcd_2004"){
                     translate([cw/2 - 0.5, -5.5, -0.5]){
                         cube([wall + 1.5, 11.0, 3.8]);
                     }
@@ -623,7 +635,7 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
                 }
             }
             // Fermo elastico a scatto sul lato opposto ai contatti
-            if(OLED_Model == "oled_091_wide"){
+            if(OLED_Model == "oled_091_wide" || OLED_Model == "lcd_1602" || OLED_Model == "lcd_2004"){
                 translate([-(cw/2 + 0.45), -4.0, 1.8]){
                     cube([0.9, 8.0, 1.0]);
                 }
@@ -635,7 +647,7 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
         }
     }
 
-    // Cabinet support bars (lasciano libera l'asola MicroSD a sinistra e la zona OLED)
+    // Cabinet support bars (lasciano libera l'asola MicroSD a sinistra e la zona OLED/LCD)
     translate([0,0,gauge]){
         difference(){
             union(){
@@ -645,10 +657,14 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
             if(Enable_OLED){
                 o_pw = (OLED_Model == "oled_091_wide") ? 41.0 :
                        (OLED_Model == "oled_130_rect") ? 38.4 :
-                       (OLED_Model == "oled_150_sq")   ? 45.0 : 30.3;
+                       (OLED_Model == "oled_150_sq")   ? 45.0 :
+                       (OLED_Model == "lcd_1602")      ? 83.0 :
+                       (OLED_Model == "lcd_2004")      ? 101.0 : 30.3;
                 o_ph = (OLED_Model == "oled_091_wide") ? 15.0 :
                        (OLED_Model == "oled_130_rect") ? 36.5 :
-                       (OLED_Model == "oled_150_sq")   ? 45.0 : 30.8;
+                       (OLED_Model == "oled_150_sq")   ? 45.0 :
+                       (OLED_Model == "lcd_1602")      ? 39.0 :
+                       (OLED_Model == "lcd_2004")      ? 63.0 : 30.8;
                 o_cx2 = ((OLED_Position == "center") ? (Rack_Width / 2) :
                          (OLED_Position == "left")   ? 60 : 135) + OLED_Offset_X;
                 o_cy2 = (u * unit) / 2 + OLED_Offset_Y;
@@ -1909,38 +1925,49 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
     }
 }
 
-// Simulazione 3D del modulo Display OLED I2C montato sul retro del pannello frontale
+// Simulazione 3D del modulo Display OLED I2C o LCD 16x2 / 20x4 montato sul retro del pannello frontale
 module oled_3d_mockup(cx, cy, model="oled_096_rect"){
+    is_lcd = (model == "lcd_1602" || model == "lcd_2004");
     pcb_w = (model == "oled_091_wide") ? 38.0 :
             (model == "oled_130_rect") ? 35.4 :
-            (model == "oled_150_sq")   ? 42.0 : 27.3;
+            (model == "oled_150_sq")   ? 42.0 :
+            (model == "lcd_1602")      ? 80.0 :
+            (model == "lcd_2004")      ? 98.0 : 27.3;
     pcb_h = (model == "oled_091_wide") ? 12.0 :
             (model == "oled_130_rect") ? 33.5 :
-            (model == "oled_150_sq")   ? 42.0 : 27.8;
+            (model == "oled_150_sq")   ? 42.0 :
+            (model == "lcd_1602")      ? 36.0 :
+            (model == "lcd_2004")      ? 60.0 : 27.8;
     scr_w = (model == "oled_091_wide") ? 26.0 :
             (model == "oled_130_rect") ? 31.5 :
-            (model == "oled_150_sq")   ? 29.0 : 23.5;
+            (model == "oled_150_sq")   ? 29.0 :
+            (model == "lcd_1602")      ? 71.2 :
+            (model == "lcd_2004")      ? 97.0 : 23.5;
     scr_h = (model == "oled_091_wide") ? 9.0 :
             (model == "oled_130_rect") ? 17.5 :
-            (model == "oled_150_sq")   ? 29.0 : 13.5;
+            (model == "oled_150_sq")   ? 29.0 :
+            (model == "lcd_1602")      ? 24.2 :
+            (model == "lcd_2004")      ? 40.0 : 13.5;
 
     z_pcb = gauge; // Appoggiato direttamente dietro la frontplate dentro la culla a scatto (senza viti)
     translate([cx, cy, z_pcb]){
-        // PCB Blu del modulo OLED I2C
-        color([0.10, 0.30, 0.70]){
+        // PCB del modulo display (verde per LCD classico, blu per OLED)
+        color(is_lcd ? [0.10, 0.45, 0.20] : [0.10, 0.30, 0.70]){
             translate([-pcb_w/2, -pcb_h/2, 0]){ cube([pcb_w, pcb_h, 1.6]); }
         }
-        // Vetro scuro del display rivolto verso il fronte (-Z)
+        // Cornice/vetro del display rivolto verso il fronte (-Z)
         color([0.08, 0.08, 0.10]){
-            translate([-scr_w/2, -scr_h/2, -1.6]){ cube([scr_w, scr_h, 1.6]); }
+            translate([-scr_w/2, -scr_h/2, is_lcd ? -4.0 : -1.6]){ cube([scr_w, scr_h, is_lcd ? 4.0 : 1.6]); }
         }
-        // Area attiva ciano/azzurra simulata
-        color([0.10, 0.75, 0.95]){
-            translate([-(scr_w-3)/2, -(scr_h-3)/2, -1.7]){ cube([scr_w-3, scr_h-3, 0.15]); }
+        // Area attiva simulata (blu retroilluminato per LCD, ciano per OLED)
+        color(is_lcd ? [0.12, 0.55, 0.90] : [0.10, 0.75, 0.95]){
+            translate([-(scr_w - (is_lcd ? 8 : 3))/2, -(scr_h - (is_lcd ? 8 : 3))/2, is_lcd ? -4.1 : -1.7]){
+                cube([scr_w - (is_lcd ? 8 : 3), scr_h - (is_lcd ? 8 : 3), 0.15]);
+            }
         }
-        // Header I2C 4-pin (VCC, GND, SCL, SDA) a sx guardando dal fronte (+X) per 0.91", in alto (+Y) per gli altri
+        // Header I2C 4-pin (VCC, GND, SCL, SDA) a sx guardando dal fronte (+X) per 0.91" e LCD, in alto (+Y) per gli altri OLED
         color([0.15, 0.15, 0.15]){
-            if(model == "oled_091_wide"){
+            if(model == "oled_091_wide" || is_lcd){
                 translate([pcb_w/2 - 3.0, -5.0, 1.6]){ cube([2.5, 10.0, 6.0]); }
             } else {
                 translate([-5.0, pcb_h/2 - 3.0, 1.6]){ cube([10.0, 2.5, 6.0]); }
@@ -1949,12 +1976,14 @@ module oled_3d_mockup(cx, cy, model="oled_096_rect"){
     }
 }
 
-// Staffa / ponticello posteriore stampabile (senza supporti) per bloccare il display OLED 0.91" senza fori sul PCB
-// Si avvita sulle due colonnine laterali (interasse 45mm) sul retro del pannello frontale
+// Staffa / ponticello posteriore stampabile (senza supporti) per bloccare il display OLED / LCD
+// Si avvita sulle due colonnine laterali sul retro del pannello frontale
 module oled_clip_bracket(model="oled_091_wide"){
     span = (model == "oled_091_wide") ? 45.0 :
            (model == "oled_130_rect") ? 30.5 :
-           (model == "oled_150_sq")   ? 36.0 : 23.0;
+           (model == "oled_150_sq")   ? 36.0 :
+           (model == "lcd_1602")      ? 75.0 :
+           (model == "lcd_2004")      ? 93.0 : 23.0;
     difference(){
         union(){
             // Traversa posteriore di bloccaggio (preme sul retro del PCB lasciando libero l'header I2C)
