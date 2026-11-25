@@ -1733,10 +1733,11 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
             }
 
             // Connettori sul lato corto anteriore (fronte):
-            // Mini-USB OTG, HDMI Standard, SATA Nativo 7-pin
-            color([0.80, 0.80, 0.82]){ translate([4.5, t, -2.0]){ cube([8.5, 4.0, 9.0]); } }   // Mini-USB OTG
+            // Mini-USB OTG, HDMI Standard, SATA Nativo 7-pin, SATA 5V Power (2-pin JST)
+            color([0.80, 0.80, 0.82]){ translate([4.5, t, -2.0]){ cube([8.5, 4.0, 9.0]); } }    // Mini-USB OTG
             color([0.80, 0.80, 0.82]){ translate([21.0, t, -2.5]){ cube([15.0, 6.5, 12.0]); } } // HDMI Standard
             color([0.16, 0.16, 0.16]){ translate([38.5, t, -1.5]){ cube([12.0, 7.5, 7.0]); } }  // SATA 7-pin
+            color([0.92, 0.92, 0.90]){ translate([52.0, t, -1.5]){ cube([5.5, 5.5, 7.5]); } }   // SATA 5V Power (2-pin JST)
 
             // Header espansione GPIO-1/2/3 e LCD lungo i lati lunghi (caratteristici Olimex LIME2)
             color([0.15, 0.15, 0.15]){
