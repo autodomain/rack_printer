@@ -605,9 +605,15 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
                 translate([-cw/2, -ch/2, -0.5]){
                     cube([cw, ch, 3.8]);
                 }
-                // Apertura sul LATO CORTO (sinistra) per passaggio contatti elettrici / header I2C 4-pin
-                translate([-(cw/2 + wall + 0.5), -5.5, -0.5]){
-                    cube([wall + 1.5, 11.0, 3.8]);
+                // Apertura per passaggio contatti elettrici / header I2C 4-pin (a sx guardando dal fronte = +X per 0.91", in alto = +Y per gli altri)
+                if(OLED_Model == "oled_091_wide"){
+                    translate([cw/2 - 0.5, -5.5, -0.5]){
+                        cube([wall + 1.5, 11.0, 3.8]);
+                    }
+                } else {
+                    translate([-5.5, ch/2 - 0.5, -0.5]){
+                        cube([11.0, wall + 1.5, 3.8]);
+                    }
                 }
             }
             // Due labbri di ritenzione elastica a scatto (snap-in) sui lati lunghi (senza viti, spessore 0.8mm con invito a 45°)
@@ -616,9 +622,15 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
                     cube([cw/2, 1.1, 1.0]);
                 }
             }
-            // Fermo elastico a scatto sul lato corto opposto ai contatti
-            translate([cw/2 - 0.45, -4.0, 1.8]){
-                cube([0.9, 8.0, 1.0]);
+            // Fermo elastico a scatto sul lato opposto ai contatti
+            if(OLED_Model == "oled_091_wide"){
+                translate([-(cw/2 + 0.45), -4.0, 1.8]){
+                    cube([0.9, 8.0, 1.0]);
+                }
+            } else {
+                translate([-4.0, -(ch/2 + 0.45), 1.8]){
+                    cube([8.0, 0.9, 1.0]);
+                }
             }
         }
     }
@@ -1926,10 +1938,10 @@ module oled_3d_mockup(cx, cy, model="oled_096_rect"){
         color([0.10, 0.75, 0.95]){
             translate([-(scr_w-3)/2, -(scr_h-3)/2, -1.7]){ cube([scr_w-3, scr_h-3, 0.15]); }
         }
-        // Header I2C 4-pin (VCC, GND, SCL, SDA) posizionato sul LATO CORTO verso l'interno
+        // Header I2C 4-pin (VCC, GND, SCL, SDA) a sx guardando dal fronte (+X) per 0.91", in alto (+Y) per gli altri
         color([0.15, 0.15, 0.15]){
             if(model == "oled_091_wide"){
-                translate([-pcb_w/2 + 0.5, -5.0, 1.6]){ cube([2.5, 10.0, 6.0]); }
+                translate([pcb_w/2 - 3.0, -5.0, 1.6]){ cube([2.5, 10.0, 6.0]); }
             } else {
                 translate([-5.0, pcb_h/2 - 3.0, 1.6]){ cube([10.0, 2.5, 6.0]); }
             }
