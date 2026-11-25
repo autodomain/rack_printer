@@ -68,6 +68,17 @@ Rear_DC_Jack_Offset_Y = 0; // [-10:0.5:30]
 // Abilita le maniglie frontali e i relativi 4 fori svasati sul pannello frontale
 Enable_Front_Handles = true;
 
+// Abilita foro e pulsante di reset sul pannello frontale (a destra guardando dal fronte)
+Enable_Reset_Button = true;
+// Diametro foro pulsante reset da pannello in mm
+Reset_Button_Dia = 7.0; // [6.5: Mini Pulsante 6.5 mm, 7.0: Pulsante Reset Standard 7.0 mm (PBS-110 mini), 12.0: Pulsante Pannello 12.0 mm]
+// Posizione del pulsante di reset sul pannello frontale (vista frontale)
+Reset_Button_Pos = "right"; // [right: A destra (fronte dx), center: Al centro, left: A sinistra (fronte sx)]
+// Spostamento orizzontale fine pulsante reset in mm
+Reset_Button_Offset_X = 0; // [-60:0.5:60]
+// Spostamento verticale fine pulsante reset in mm
+Reset_Button_Offset_Y = 0; // [-15:0.5:30]
+
 /* [Posizionamento Accessori Interni (mm)] */
 // Orientamento connettori disco SSD 2.5"
 SSD_Orientation = "front_sata"; // [front_sata: Connettore SATA verso il fronte (consigliato per LIME2), rear_sata: Connettore SATA verso il retro]
@@ -372,6 +383,12 @@ module go(){
         [dc_jack_x, dc_jack_y, Rear_DC_Jack_Dia]
     ] : [];
 
+    // Posizione del pulsante di reset frontale (a destra guardando dal fronte = -X)
+    rst_btn_x = ((Reset_Button_Pos == "right") ? 34.0 :
+                 (Reset_Button_Pos == "left")  ? (Rack_Width - 34.0) :
+                 (Rack_Width / 2)) + Reset_Button_Offset_X;
+    rst_btn_y = (Units * unit) / 2 + Reset_Button_Offset_Y;
+
     // --- SELEZIONE COMPONENTE DA GENERARE ---
     if(Part=="cabinet_assembly" || Part=="a" || Part=="All"){
         // Visualizzazione dell'assieme completo montato orientato dritto verso l'utente
@@ -389,6 +406,9 @@ module go(){
                 }
                 if(Enable_Rear_DC_Jack){
                     dc_jack_3d_mockup(20 + gauge_box + dc_jack_x, gauge_box + dc_jack_y, eff_depth, Rear_DC_Jack_Dia);
+                }
+                if(Enable_Reset_Button){
+                    reset_button_3d_mockup(rst_btn_x, rst_btn_y, Reset_Button_Dia);
                 }
             } else {
                 frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
@@ -408,6 +428,9 @@ module go(){
             }
             if(Enable_Rear_DC_Jack){
                 dc_jack_3d_mockup(20 + gauge_box + dc_jack_x, gauge_box + dc_jack_y, eff_depth, Rear_DC_Jack_Dia);
+            }
+            if(Enable_Reset_Button){
+                reset_button_3d_mockup(rst_btn_x, rst_btn_y, Reset_Button_Dia);
             }
         }
     }else if(Part=="frontplate" || Part=="b" || Part=="FrontPlate"){
@@ -511,6 +534,22 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
             translate([18, u*unit-4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }        
             translate([Rack_Width-18, 4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }
             translate([Rack_Width-18, u*unit-4.5, gauge-0.25]){ rotate([180,0,0]){ screw(); } }
+        }
+
+        // Foro e incisione pulsante di reset frontale
+        if(Enable_Reset_Button){
+            rst_x = ((Reset_Button_Pos == "right") ? 34.0 :
+                     (Reset_Button_Pos == "left")  ? (Rack_Width - 34.0) :
+                     (Rack_Width / 2)) + Reset_Button_Offset_X;
+            rst_y = (u * unit) / 2 + Reset_Button_Offset_Y;
+            translate([rst_x, rst_y, -1]){ cylinder(d=Reset_Button_Dia, h=gauge+2, $fn=28); }
+            translate([rst_x, rst_y + Reset_Button_Dia/2 + 2.2, -0.01]){
+                linear_extrude(height=0.55){
+                    mirror([1,0,0]){
+                        text("RST", size=2.3, halign="center", valign="bottom", font="Liberation Sans:style=Bold");
+                    }
+                }
+            }
         }
 
         // Incisione scritte LED sulla facciata frontale sopra i fori della fibra
@@ -2021,6 +2060,33 @@ module dc_jack_3d_mockup(jx, jy, dp, dia=8.0){
         color([0.85, 0.75, 0.20]){
             translate([-1.0,  2.5, -17.0]){ cube([2.0, 0.6, 4.0]); }
             translate([-1.0, -3.1, -17.0]){ cube([2.0, 0.6, 4.0]); }
+        }
+    }
+}
+
+// Simulazione 3D del pulsante di reset da pannello montato sul frontale (-Z sporgente in avanti)
+module reset_button_3d_mockup(rx, ry, dia=7.0){
+    translate([rx, ry, 0]){
+        // Ghiera / battuta esterna sul fronte
+        color([0.78, 0.78, 0.80]){
+            translate([0, 0, -1.6]){ cylinder(d=dia + 2.6, h=1.6, $fn=24); }
+        }
+        // Tasto rosso sporgente sul fronte
+        color([0.85, 0.12, 0.12]){
+            translate([0, 0, -3.8]){ cylinder(d=dia * 0.65, h=2.4, $fn=24); }
+        }
+        // Corpo filettato + microswitch interno (+Z dietro la frontplate)
+        color([0.16, 0.16, 0.18]){
+            cylinder(d=dia - 0.2, h=10.5, $fn=24);
+        }
+        // Dado di fissaggio sul retro della frontplate
+        color([0.75, 0.75, 0.78]){
+            translate([0, 0, gauge]){ cylinder(d=dia + 3.2, h=2.0, $fn=6); }
+        }
+        // 2 terminali posteriori
+        color([0.85, 0.75, 0.20]){
+            translate([-1.6, -0.4, 10.5]){ cube([0.7, 0.8, 3.5]); }
+            translate([ 0.9, -0.4, 10.5]){ cube([0.7, 0.8, 3.5]); }
         }
     }
 }
