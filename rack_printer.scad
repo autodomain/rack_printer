@@ -352,19 +352,24 @@ module go(){
     oled_pegs = [];
     all_front_sq = concat(rpi_front_sq, oled_sq);
 
-    // Fori per fibra ottica LED di stato (tutti sul frontale per massima visibilita)
+    // Fori per fibra ottica LED di stato (PWR sempre nella stessa posizione a x0+50; 5 fori su BBB)
     led_y = 12.0;
-    led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 44) :
-             (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 36) :
-             (Board_Type == "rpizero")      ? (20 + gauge_box + pi_offset_x + 24) :
-             (Board_Type == "rpipico")      ? (20 + gauge_box + pi_offset_x + 14) :
-             (20 + gauge_box + pi_offset_x + 14);
-    led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 50) :
-             (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 43.2) :
-             (20 + gauge_box + pi_offset_x + 20);
+    pwr_x = 20 + gauge_box + pi_offset_x + 50.0;
+    led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_offset_x + 44.0) :
+             (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_offset_x + 34.0) :
+             (Board_Type == "rpizero")      ? (20 + gauge_box + pi_offset_x + 24.0) :
+             (Board_Type == "rpipico")      ? (20 + gauge_box + pi_offset_x + 14.0) :
+             (20 + gauge_box + pi_offset_x + 44.0);
+    led_x2 = pwr_x;
     rpi_front_rd = (Board_Type != "none" && Enable_LED_Guide) ? (
         (Board_Type == "rpizero" || Board_Type == "rpipico") ? [
             [led_x1, led_y, fiber_hole]
+        ] : (Board_Type == "bbb" || Board_Type == "bbb_cape") ? [
+            [20 + gauge_box + pi_offset_x + 34.0, led_y, fiber_hole],
+            [20 + gauge_box + pi_offset_x + 37.0, led_y, fiber_hole],
+            [20 + gauge_box + pi_offset_x + 40.0, led_y, fiber_hole],
+            [20 + gauge_box + pi_offset_x + 43.0, led_y, fiber_hole],
+            [pwr_x, led_y, fiber_hole]
         ] : [
             [led_x1, led_y, fiber_hole],
             [led_x2, led_y, fiber_hole]
@@ -601,15 +606,14 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
         // Incisione scritte LED sulla facciata frontale sopra i fori della fibra
         if(Board_Type != "none" && Enable_LED_Guide){
             led_y = 12.0;
-            led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 44) :
-                     (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 36) :
-                     (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24) :
-                     (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14) :
-                     (20 + gauge_box + pi_ox + 14);
-            led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 50) :
-                     (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 43.2) :
-                     (20 + gauge_box + pi_ox + 20);
-            txt1 = (Board_Type == "bbb" || Board_Type == "bbb_cape") ? "USR" : "ACT";
+            pwr_x = 20 + gauge_box + pi_ox + 50.0;
+            led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 44.0) :
+                     (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 38.5) :
+                     (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24.0) :
+                     (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14.0) :
+                     (20 + gauge_box + pi_ox + 44.0);
+            led_x2 = pwr_x;
+            txt1 = (Board_Type == "bbb" || Board_Type == "bbb_cape") ? "USR0..3" : "ACT";
             translate([led_x1, led_y + 3.5, -0.01]){
                 linear_extrude(0.6){
                     mirror([1, 0, 0]){
@@ -632,26 +636,42 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
     // Tubetti di ritenzione e guida della fibra ottica sul retro del pannello frontale
     if(Board_Type != "none" && Enable_LED_Guide){
         led_y = 12.0;
-        led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 44) :
-                 (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 36) :
-                 (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24) :
-                 (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14) :
-                 (20 + gauge_box + pi_ox + 14);
-        led_x2 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 50) :
-                 (Board_Type == "bbb" || Board_Type == "bbb_cape") ? (20 + gauge_box + pi_ox + 43.2) :
-                 (20 + gauge_box + pi_ox + 20);
+        pwr_x = 20 + gauge_box + pi_ox + 50.0;
+        led_x1 = (Board_Type == "olimex_lime2") ? (20 + gauge_box + pi_ox + 44.0) :
+                 (Board_Type == "rpizero")      ? (20 + gauge_box + pi_ox + 24.0) :
+                 (Board_Type == "rpipico")      ? (20 + gauge_box + pi_ox + 14.0) :
+                 (20 + gauge_box + pi_ox + 44.0);
+        led_x2 = pwr_x;
         collar_d = max(3.0, fiber_hole + 1.8);
-        translate([led_x1, led_y, gauge]){
-            difference(){
-                cylinder(d=collar_d, h=5);
-                translate([0,0,-0.5]){ cylinder(d=fiber_hole, h=6); }
+        if(Board_Type == "bbb" || Board_Type == "bbb_cape"){
+            // Blocchetto unico a 4 fori per USR0..3 + collarino separato per PWR
+            translate([20 + gauge_box + pi_ox + 38.5, led_y, gauge]){
+                difference(){
+                    translate([-6.5, -1.8, 0]){ cube([13.0, 3.6, 5]); }
+                    for(dx = [-4.5, -1.5, 1.5, 4.5]){
+                        translate([dx, 0, -0.5]){ cylinder(d=fiber_hole, h=6); }
+                    }
+                }
             }
-        }
-        if(Board_Type != "rpizero" && Board_Type != "rpipico"){
-            translate([led_x2, led_y, gauge]){
+            translate([pwr_x, led_y, gauge]){
                 difference(){
                     cylinder(d=collar_d, h=5);
                     translate([0,0,-0.5]){ cylinder(d=fiber_hole, h=6); }
+                }
+            }
+        } else {
+            translate([led_x1, led_y, gauge]){
+                difference(){
+                    cylinder(d=collar_d, h=5);
+                    translate([0,0,-0.5]){ cylinder(d=fiber_hole, h=6); }
+                }
+            }
+            if(Board_Type != "rpizero" && Board_Type != "rpipico"){
+                translate([led_x2, led_y, gauge]){
+                    difference(){
+                        cylinder(d=collar_d, h=5);
+                        translate([0,0,-0.5]){ cylinder(d=fiber_hole, h=6); }
+                    }
                 }
             }
         }
@@ -891,28 +911,56 @@ module light_guide_pcb_clip(fiber_d=1.0, pcb_t=1.6, reach=6.5){
     }
 }
 
+// 5) Pezzo unico a 4 fibre per i 4 LED utente (USR0..USR3) della BeagleBone Black
+module light_guide_bbb_usr4(fiber_d=1.0){
+    fh = fiber_d + 0.2;
+    difference(){
+        union(){
+            translate([-2.0, -2.4, 0]){ cube([11.2, 6.0, 1.2]); }
+            translate([-1.8, -2.0, 0]){ cube([10.8, 5.2, 6.5]); }
+        }
+        for(i = [0 : 3]){
+            lx = i * 2.4;
+            translate([lx, 0, -0.1]){ cylinder(d1=2.2, d2=fh, h=1.8, $fn=16); }
+            translate([lx, 0, 1.3]){
+                rotate([-45, 0, 0]){
+                    cylinder(d=fh, h=10.5, $fn=16);
+                }
+            }
+        }
+    }
+}
+
 // Genera il/i supporti LED pronti per la stampa in base a LED_Guide_Style e Board_Type
 module light_guide_bracket(fiber_d=1.0, board_type=Board_Type, style=LED_Guide_Style){
-    count = (board_type == "rpizero" || board_type == "rpipico") ? 1 : 2;
-    pcb_t = (board_type == "rpipico") ? 1.0 : 1.6;
-    if(style == "dual_screw"){
-        light_guide_dual_screw(fiber_d, board_type);
-    } else if(style == "single_screw"){
-        for(i = [0 : count - 1]){
-            translate([i * 15.0, 0, 0]){
-                light_guide_single_screw(fiber_d, board_type, i);
-            }
-        }
-    } else if(style == "pcb_clip"){
-        for(i = [0 : count - 1]){
-            translate([i * 10.0, 0, pcb_t + 1.55]){
-                light_guide_pcb_clip(fiber_d, pcb_t, 6.5);
-            }
+    if(board_type == "bbb" || board_type == "bbb_cape"){
+        // Pezzo unico a 4 fibre per USR0..3 + cappuccio singolo separato per PWR
+        light_guide_bbb_usr4(fiber_d);
+        translate([16.0, 0, 0]){
+            light_guide_single(fiber_d);
         }
     } else {
-        for(i = [0 : count - 1]){
-            translate([i * 9.0, 0, 0]){
-                light_guide_single(fiber_d);
+        count = (board_type == "rpizero" || board_type == "rpipico") ? 1 : 2;
+        pcb_t = (board_type == "rpipico") ? 1.0 : 1.6;
+        if(style == "dual_screw"){
+            light_guide_dual_screw(fiber_d, board_type);
+        } else if(style == "single_screw"){
+            for(i = [0 : count - 1]){
+                translate([i * 15.0, 0, 0]){
+                    light_guide_single_screw(fiber_d, board_type, i);
+                }
+            }
+        } else if(style == "pcb_clip"){
+            for(i = [0 : count - 1]){
+                translate([i * 10.0, 0, pcb_t + 1.55]){
+                    light_guide_pcb_clip(fiber_d, pcb_t, 6.5);
+                }
+            }
+        } else {
+            for(i = [0 : count - 1]){
+                translate([i * 9.0, 0, 0]){
+                    light_guide_single(fiber_d);
+                }
             }
         }
     }
@@ -939,20 +987,36 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
              (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 43.2) : (x0 + 7.5);
 
     front_x1 = (board_type == "olimex_lime2") ? (x0 + 44.0) :
-               (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 36.0) :
+               (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 34.0) :
                (board_type == "rpizero") ? (x0 + 24.0) :
-               (board_type == "rpipico") ? (x0 + 14.0) : (x0 + 14.0);
-    front_x2 = (board_type == "olimex_lime2") ? (x0 + 50.0) :
-               (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 43.2) : (x0 + 20.0);
+               (board_type == "rpipico") ? (x0 + 14.0) : (x0 + 44.0);
+    front_x2 = x0 + 50.0; // PWR sempre nella stessa posizione sul frontale
     front_y = 12.0;
 
     z_front = gauge + 4.5;
     led_pairs = (board_type == "rpizero" || board_type == "rpipico") ?
                 [[led_x1, front_x1, z_led]] :
+                (board_type == "bbb" || board_type == "bbb_cape") ? [
+                    [x0 + 36.0, x0 + 34.0, z_led],
+                    [x0 + 38.4, x0 + 37.0, z_led],
+                    [x0 + 40.8, x0 + 40.0, z_led],
+                    [x0 + 43.2, x0 + 43.0, z_led],
+                    [x0 + 12.0, front_x2,  z_led + 2.0] // PWR vicino al jack 5V -> foro PWR distanziato a x0+50
+                ] :
                 [[led_x1, front_x1, z_led], [led_x2, front_x2, z_led2]];
 
     // Render del supporto scelto (rotate([-90,0,0]) porta +Z su +Y in alto e +Y su -Z verso il fronte)
-    if(style == "dual_screw"){
+    if(board_type == "bbb" || board_type == "bbb_cape"){
+        // Pezzo unico a 4 fibre su USR0..USR3 + cappuccio singolo separato su PWR
+        color([0.92, 0.72, 0.15]){
+            translate([x0 + 36.0, y0 + t, z_led]){
+                rotate([-90, 0, 0]){ light_guide_bbb_usr4(fiber_d); }
+            }
+            translate([x0 + 12.0, y0 + t, z_led + 2.0]){
+                rotate([-90, 0, 0]){ light_guide_single(fiber_d); }
+            }
+        }
+    } else if(style == "dual_screw"){
         p0 = _led_rel_xy(board_type, 0);
         color([0.92, 0.72, 0.15]){
             translate([led_x1 - p0[0], y0 + t, z_led + p0[1]]){
@@ -1002,7 +1066,7 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
         fx = led_pairs[idx][1];
         zl = led_pairs[idx][2];
         y_base = y0 + t + ((style == "single_screw") ? (idx * 2.3) : 0);
-        f_col = (idx == 0) ? [1.00, 0.25, 0.20] : [0.20, 1.00, 0.45];
+        f_col = (idx == len(led_pairs) - 1 && len(led_pairs) > 1) ? [1.00, 0.25, 0.20] : [0.20, 0.85, 1.00];
 
         p_start = [lx, y_base + 0.8, zl];
         p_exit  = [lx, y_base + 5.2, zl - 4.2];
