@@ -389,9 +389,8 @@ module go(){
             [pi_offset_x + 38, 5, 17, 15]  // RJ45 Ethernet
         ] :
         (Board_Type == "bbb" || Board_Type == "bbb_cape") ? [
-            [pi_offset_x + 3.5,  5, 15.5, 12], // USB 2.0 Type-A Host
-            [pi_offset_x + 21.5, 5, 17,   15], // RJ45 Ethernet 10/100
-            [pi_offset_x + 42.0, 5, 11,   12]  // 5V DC Power Barrel Jack (a dx)
+            [pi_offset_x + 17.5, 5, 17, 15], // RJ45 Ethernet 10/100 (P5)
+            [pi_offset_x + 41.0, 5, 11, 12]  // 5V DC Power Barrel Jack (P1 - a dx)
         ] :
         (Board_Type == "olimex_lime2") ? [
             [pi_offset_x + 3.2,  5, 17.2, 15.0], // RJ45 Gigabit Ethernet (centro 12.06mm / 475mil)
@@ -997,22 +996,22 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     led_pairs = (board_type == "rpizero" || board_type == "rpipico") ?
                 [[led_x1, front_x1, z_led]] :
                 (board_type == "bbb" || board_type == "bbb_cape") ? [
-                    [x0 + 2.5,  x0 + 34.0, z_led],
-                    [x0 + 4.9,  x0 + 37.0, z_led],
-                    [x0 + 7.3,  x0 + 40.0, z_led],
-                    [x0 + 9.7,  x0 + 43.0, z_led],
-                    [x0 + 42.0, front_x2,  z_led + 0.5] // PWR vicino al jack 5V (a dx) -> foro PWR a x0+50
+                    [x0 + 4.5,  x0 + 34.0, z_led],
+                    [x0 + 4.5,  x0 + 37.0, z_led + 2.4],
+                    [x0 + 4.5,  x0 + 40.0, z_led + 4.8],
+                    [x0 + 4.5,  x0 + 43.0, z_led + 7.2],
+                    [x0 + 39.5, front_x2,  z_led + 2.5] // PWR D1 vicino al jack 5V P1 -> foro PWR a x0+50
                 ] :
                 [[led_x1, front_x1, z_led], [led_x2, front_x2, z_led2]];
 
     // Render del supporto scelto (rotate([-90,0,0]) porta +Z su +Y in alto e +Y su -Z verso il fronte)
     if(board_type == "bbb" || board_type == "bbb_cape"){
-        // Pezzo unico a 4 fibre su USR0..USR3 (bordo sx) + cappuccio singolo separato su PWR (vicino jack 5V a dx)
+        // Pezzo unico a 4 fibre su D2..D5 (USR0..USR3 lungo il bordo sx) + cappuccio singolo su D1 (PWR vicino P1 a dx)
         color([0.92, 0.72, 0.15]){
-            translate([x0 + 2.5, y0 + t, z_led]){
-                rotate([-90, 0, 0]){ light_guide_bbb_usr4(fiber_d); }
+            translate([x0 + 4.5, y0 + t, z_led]){
+                rotate([-90, 0, -90]){ light_guide_bbb_usr4(fiber_d); }
             }
-            translate([x0 + 42.0, y0 + t, z_led + 0.5]){
+            translate([x0 + 39.5, y0 + t, z_led + 2.5]){
                 rotate([-90, 0, 0]){ light_guide_single(fiber_d); }
             }
         }
@@ -1972,52 +1971,42 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
                 }
             }
 
-            // Porte Posteriori BeagleBone Black
-            // 1. Porta USB 2.0 Host Type-A orizzontale
-            color([0.82, 0.82, 0.84]){
-                translate([4.0, t, l - 14]){ cube([14.5, 7.5, 17]); }
-            }
-
-            // 2. RJ45 Ethernet 10/100 con metallizzazione
+            // Porte Posteriori BeagleBone Black (Fig. 9.2 Manuale Ufficiale: P5 Ethernet + P1 Jack 5V a dx)
+            // 1. RJ45 Ethernet 10/100 (P5)
             color([0.78, 0.78, 0.8]){
-                translate([22.0, t, l - 16]){ cube([16, 13.5, 21]); }
+                translate([18.0, t, l - 16]){ cube([16, 13.5, 21]); }
             }
 
-            // 3. Jack di alimentazione 5V DC (5.5mm x 2.1mm - a dx)
+            // 2. Jack di alimentazione 5V DC (P1, 5.5mm x 2.1mm - a dx)
             color([0.18, 0.18, 0.18]){
-                translate([43.0, t, l - 14]){ cube([9, 11, 14.5]); }
+                translate([42.0, t, l - 14]){ cube([9, 11, 14.5]); }
             }
             color([0.8, 0.8, 0.82]){
-                translate([47.5, t + 5.5, l - 14 + 14.5]){
+                translate([46.5, t + 5.5, l - 14 + 14.5]){
                     rotate([90, 0, 0]){ cylinder(d=5.5, h=2.5, $fn=24); }
                 }
             }
 
-            // Connettori Frontali
-            // Porta mini-USB OTG Client (centrata sul fronte)
-            color([0.8, 0.8, 0.82]){
-                translate([23.3, t, -2]){ cube([8, 4, 9]); }
+            // Connettori Frontali BeagleBone Black (USB Host P3, microHDMI P6 sotto, microSD P7 sotto)
+            color([0.82, 0.82, 0.84]){
+                translate([2.0, t, -2.0]){ cube([14.5, 7.5, 17]); } // USB 2.0 Host Type-A (P3)
             }
-
-            // Connettore Micro-HDMI su bordo sinistro
             color([0.75, 0.75, 0.78]){
-                translate([-2, t, 33]){ cube([8, 3.2, 7.5]); }
+                translate([24.0, -3.2, -1.5]){ cube([7.5, 3.2, 8.0]); } // microHDMI (P6 underside)
             }
-
-            // Slot MicroSD sul lato inferiore (underside)
             color([0.75, 0.75, 0.75]){
-                translate([19, -1.8, 3]){ cube([14, 1.8, 15]); }
+                translate([34.0, -1.8, -1.5]){ cube([14, 1.8, 15]); } // microSD (P7 underside)
             }
 
-            // 4 LED Blu di stato Utente (USR0..USR3) sul bordo sinistro (-X) + LED PWR vicino al jack 5V (+X)
+            // 4 LED Blu di stato Utente (D2..D5 / USR0..USR3 lungo il bordo sx) + LED PWR (D1 vicino a P1)
             color([0.1, 0.45, 0.95]){
                 for(led_i=[0:3]){
-                    translate([2.5 + led_i*2.4, t, 73.5]){
+                    translate([4.5, t, 73.5 + led_i*2.4]){
                         cylinder(d=1.2, h=0.6, $fn=12);
                     }
                 }
             }
-            color([0.1, 0.45, 0.95]){ translate([42.0, t, 74.0]){ cylinder(d=1.2, h=0.6, $fn=12); } }
+            color([0.1, 0.45, 0.95]){ translate([39.5, t, 76.0]){ cylinder(d=1.2, h=0.6, $fn=12); } }
 
             // Pulsanti Power, Reset, Boot
             color([0.15, 0.15, 0.15]){
