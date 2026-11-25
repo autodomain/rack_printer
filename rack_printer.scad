@@ -122,6 +122,9 @@ Enable_LED_Guide = true;
 // Diametro della fibra ottica in mm (consigliata fibra da 1.0 mm)
 Fiber_Diameter = 1.0; // [1.0: Fibra ottica 1.0 mm (Consigliata), 1.5: Fibra ottica 1.5 mm, 2.0: Fibra ottica 2.0 mm, 3.0: Filamento trasparente 3.0 mm]
 
+// Tipo di supporto per catturare la luce dei LED con fibra ottica
+LED_Guide_Style = "single_cap"; // [single_cap: Cappuccio Singolo (adesivo / colla a caldo - universale), single_screw: Braccetti Singoli a Vite su distanziale (senza colla - tutte le schede), dual_screw: Staffa Unica a Vite su distanziale (senza colla - 2 LED), pcb_clip: Clip a Scatto su Bordo PCB (senza colla - tutte le schede)]
+
 /* [Dimensioni Principali (mm)] */
 // Larghezza totale rack in mm (Fissata a 200 mm)
 Rack_Width = 200; 
@@ -771,20 +774,15 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
 }
 
 
-// Cappuccio / convogliatore singolo per 1 LED SMD con fibra ottica (stampabile piatto, senza supporti)
-// Isola otticamente il singolo LED e blocca per attrito la fibra ottica guidandola a 45° verso il fronte
+// 1) Cappuccio / convogliatore singolo per 1 LED SMD (adesivo / colla a caldo - universale)
 module light_guide_single(fiber_d=1.0){
-    fh = fiber_d + 0.2; // Foro con leggero attrito per trattenere la fibra
+    fh = fiber_d + 0.2;
     difference(){
         union(){
-            // Piedino / flangia di appoggio sul PCB attorno al singolo LED
             translate([-2.5, -2.5, 0]){ cube([5.0, 6.2, 1.2]); }
-            // Torretta di schermatura e guida fibra
             translate([-2.2, -2.0, 0]){ cube([4.4, 5.2, 6.5]); }
         }
-        // Campana inferiore centrata sul singolo LED SMD
         translate([0, 0, -0.1]){ cylinder(d1=3.2, d2=fh, h=1.8, $fn=20); }
-        // Tunnel guida inclinato a 45° verso +Y (fronte)
         translate([0, 0, 1.3]){
             rotate([-45, 0, 0]){
                 cylinder(d=fh, h=10.5, $fn=20);
@@ -793,30 +791,142 @@ module light_guide_single(fiber_d=1.0){
     }
 }
 
-// Genera i cappucci per singolo LED necessari alla scheda selezionata (1 per Zero/Pico, 2 per tutte le altre)
-module light_guide_bracket(fiber_d=1.0, board_type=Board_Type){
-    count = (board_type == "rpizero" || board_type == "rpipico") ? 1 : 2;
-    for(i = [0 : count - 1]){
-        translate([i * 9.0, 0, 0]){
-            light_guide_single(fiber_d);
+// Helper coordinate relative LED rispetto al distanziale anteriore destro per ciascuna scheda
+function _led_screw_d(b) = (b == "olimex_lime2" || b == "bbb" || b == "bbb_cape") ? 3.2 : (b == "rpipico") ? 2.2 : 2.8;
+function _led_rel_xy(b, idx=0) =
+    (b == "olimex_lime2") ? ((idx == 0) ? [-6.81, 7.55] : [0.19, 7.55]) :
+    (b == "bbb" || b == "bbb_cape") ? ((idx == 0) ? [-10.0, 4.5] : [-4.0, 4.5]) :
+    (b == "rpizero") ? [-3.5, -2.5] :
+    (b == "rpipico") ? [-5.7, -3.0] :
+    ((idx == 0) ? [-6.5, -4.5] : [-1.5, -4.5]); // rpi3 / rpi4 / rpi5
+
+// 2) Braccetto singolo a vite su distanziale per 1 LED SMD (senza colla)
+module light_guide_single_screw(fiber_d=1.0, board_type=Board_Type, led_index=0){
+    fh = fiber_d + 0.2;
+    sd = _led_screw_d(board_type);
+    xy = _led_rel_xy(board_type, led_index);
+    lx = xy[0];
+    ly = xy[1];
+    difference(){
+        union(){
+            cylinder(d=7.2, h=2.2, $fn=24);
+            hull(){
+                cylinder(d=5.8, h=2.0, $fn=20);
+                translate([lx, ly, 0]){ cylinder(d=4.8, h=2.0, $fn=20); }
+            }
+            translate([lx - 2.2, ly - 2.0, 0]){ cube([4.4, 5.2, 6.5]); }
+        }
+        translate([0, 0, -1]){ cylinder(d=sd, h=5, $fn=20); }
+        translate([lx, ly, -0.1]){ cylinder(d1=3.2, d2=fh, h=1.8, $fn=20); }
+        translate([lx, ly, 1.3]){
+            rotate([-45, 0, 0]){
+                cylinder(d=fh, h=10.5, $fn=20);
+            }
         }
     }
 }
 
-// Simulazione 3D dei cappucci per singolo LED montati su tutte le schede e relative fibre ottiche fino al frontale
-module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0){
+// 3) Staffa unica a vite su distanziale per 2 LED (senza colla)
+module light_guide_dual_screw(fiber_d=1.0, board_type=Board_Type){
+    fh = fiber_d + 0.2;
+    sd = _led_screw_d(board_type);
+    p0 = _led_rel_xy(board_type, 0);
+    p1 = (board_type == "rpizero" || board_type == "rpipico") ? p0 : _led_rel_xy(board_type, 1);
+    min_x = min(p0[0], p1[0]) - 2.6;
+    max_x = max(p0[0], p1[0]) + 2.6;
+    mid_y = (p0[1] + p1[1]) / 2;
+    difference(){
+        union(){
+            cylinder(d=7.5, h=3.0, $fn=24);
+            hull(){
+                cylinder(d=6.8, h=2.4, $fn=20);
+                translate([p0[0], p0[1], 0]){ cylinder(d=5.0, h=2.4, $fn=20); }
+                translate([p1[0], p1[1], 0]){ cylinder(d=5.0, h=2.4, $fn=20); }
+            }
+            translate([min_x, mid_y - 2.2, 0]){
+                cube([max_x - min_x, 5.8, 6.8]);
+            }
+        }
+        translate([0, 0, -1]){ cylinder(d=sd, h=6, $fn=20); }
+        translate([0, 0, 1.4]){ cylinder(d=5.6, h=3, $fn=20); }
+        for(pt = (board_type == "rpizero" || board_type == "rpipico") ? [p0] : [p0, p1]){
+            translate([pt[0], pt[1], -0.1]){ cylinder(d1=3.2, d2=fh, h=1.8, $fn=20); }
+            translate([pt[0], pt[1], 1.3]){
+                rotate([-45, 0, 0]){
+                    cylinder(d=fh, h=10.5, $fn=20);
+                }
+            }
+        }
+    }
+}
+
+// 4) Clip a scatto sul bordo del PCB per 1 singolo LED (senza colla e senza viti, stampabile piatta)
+module light_guide_pcb_clip(fiber_d=1.0, pcb_t=1.6, reach=6.5){
+    fh = fiber_d + 0.2;
+    slot = pcb_t + 0.15;
+    difference(){
+        union(){
+            translate([-2.4, -2.2, -(slot + 1.4)]){
+                cube([4.8, 3.8, slot + 3.0]);
+            }
+            translate([-2.4, -reach - 2.2, 0]){
+                cube([4.8, reach + 3.0, 6.2]);
+            }
+            translate([-2.4, -reach * 0.65, -(slot + 1.4)]){
+                cube([4.8, reach * 0.65 + 1.2, 1.4]);
+            }
+        }
+        translate([-3.0, -reach - 1.0, -slot]){
+            cube([6.0, reach + 1.2, slot]);
+        }
+        translate([0, -reach, -0.1]){ cylinder(d1=3.2, d2=fh, h=1.8, $fn=20); }
+        translate([0, -reach, 1.3]){
+            rotate([-45, 0, 0]){
+                cylinder(d=fh, h=10.5, $fn=20);
+            }
+        }
+    }
+}
+
+// Genera il/i supporti LED pronti per la stampa in base a LED_Guide_Style e Board_Type
+module light_guide_bracket(fiber_d=1.0, board_type=Board_Type, style=LED_Guide_Style){
+    count = (board_type == "rpizero" || board_type == "rpipico") ? 1 : 2;
+    pcb_t = (board_type == "rpipico") ? 1.0 : 1.6;
+    if(style == "dual_screw"){
+        light_guide_dual_screw(fiber_d, board_type);
+    } else if(style == "single_screw"){
+        for(i = [0 : count - 1]){
+            translate([i * 15.0, 0, 0]){
+                light_guide_single_screw(fiber_d, board_type, i);
+            }
+        }
+    } else if(style == "pcb_clip"){
+        for(i = [0 : count - 1]){
+            translate([i * 10.0, 0, pcb_t + 1.55]){
+                light_guide_pcb_clip(fiber_d, pcb_t, 6.5);
+            }
+        }
+    } else {
+        for(i = [0 : count - 1]){
+            translate([i * 9.0, 0, 0]){
+                light_guide_single(fiber_d);
+            }
+        }
+    }
+}
+
+// Simulazione 3D del supporto LED scelto montato su tutte le schede e relative fibre ottiche
+module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide_Style){
     x0 = 20 + gauge_box + pi_ox;
     y0 = 6.0;
-    t  = 1.6;
+    t  = (board_type == "rpipico") ? 1.0 : 1.6;
 
-    // Coordinate Z anteriori reali di ciascuna scheda
     z_led = (board_type == "olimex_lime2") ? (gauge + (dp - 4.0 - 21.55 + Board_Offset_Z - 40.86 - 21.55) + 14.0) :
             (board_type == "bbb" || board_type == "bbb_cape") ? (gauge + (dp - 4.0 - 16.0 + Board_Offset_Z - 66.1 - 16.0) + 11.5) :
             (board_type == "rpizero") ? (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 58.0 - 3.5) + 6.0) :
             (board_type == "rpipico") ? (gauge + (dp - 4.0 - 2.0 + Board_Offset_Z - 47.0 - 2.0) + 5.0) :
-            (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 49.0 - 3.5) + 8.0); // rpi3 / rpi4 / rpi5
+            (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 49.0 - 3.5) + 8.0);
 
-    // Coordinate X dei LED sulla scheda (allineate ai fori frontali PWR / ACT)
     led_x1 = (board_type == "olimex_lime2") ? (x0 + 48.0) :
              (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 42.0) :
              (board_type == "rpizero") ? (x0 + 23.0) :
@@ -833,18 +943,54 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0){
                 [[led_x1, front_x1]] :
                 [[led_x1, front_x1], [led_x2, front_x2]];
 
-    for(p = led_pairs){
-        lx = p[0];
-        fx = p[1];
-        // Cappuccio singolo montato direttamente sopra il LED SMD
+    // Render del supporto scelto
+    if(style == "dual_screw"){
+        p0 = _led_rel_xy(board_type, 0);
         color([0.92, 0.72, 0.15]){
-            translate([lx, y0 + t, z_led]){
+            translate([led_x1 - p0[0], y0 + t, z_led + p0[1]]){
                 rotate([90, 0, 0]){
-                    light_guide_single(fiber_d);
+                    light_guide_dual_screw(fiber_d, board_type);
                 }
             }
         }
-        // Fibra ottica dal cappuccio singolo fino al collarino sul pannello frontale
+    } else if(style == "single_screw"){
+        for(idx = [0 : len(led_pairs) - 1]){
+            px = led_pairs[idx][0];
+            rel = _led_rel_xy(board_type, idx);
+            color([0.92, 0.72, 0.15]){
+                translate([px - rel[0], y0 + t + idx * 2.3, z_led + rel[1]]){
+                    rotate([90, 0, 0]){
+                        light_guide_single_screw(fiber_d, board_type, idx);
+                    }
+                }
+            }
+        }
+    } else if(style == "pcb_clip"){
+        for(p = led_pairs){
+            color([0.92, 0.72, 0.15]){
+                translate([p[0], y0 + t, z_led - 6.5]){
+                    rotate([90, 0, 0]){
+                        light_guide_pcb_clip(fiber_d, t, 6.5);
+                    }
+                }
+            }
+        }
+    } else {
+        for(p = led_pairs){
+            color([0.92, 0.72, 0.15]){
+                translate([p[0], y0 + t, z_led]){
+                    rotate([90, 0, 0]){
+                        light_guide_single(fiber_d);
+                    }
+                }
+            }
+        }
+    }
+
+    // Fibre ottiche simulate fino ai collarini sul pannello frontale
+    for(p = led_pairs){
+        lx = p[0];
+        fx = p[1];
         color([0.20, 0.85, 1.00, 0.85]){
             hull(){
                 translate([lx, y0 + t + 3.2, z_led - 3.2]){ sphere(d=fiber_d, $fn=12); }
