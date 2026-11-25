@@ -817,15 +817,6 @@ module cabinet(dp,u,screw_bottom_front,round_peg,screw_side_front,pi_ox=14){
                 translate([cutout_x, 6, dp - 62 + Board_Offset_Z]){ cube([15, 12, 56]); }
             }
         }
-        
-        // Asolature posteriori alle estremità della parete laterale
-        translate([20, unit/2+3, dp]){ cylinder(d=gauge_box, h=gauge+10); }
-        translate([20, unit/2+0, dp]){ cylinder(d=gauge_box, h=gauge+10); }
-        translate([20, unit/2-3, dp]){ cylinder(d=gauge_box, h=gauge+10); }
-    
-        translate([20+width, unit/2+3, dp]){ cylinder(d=gauge_box, h=gauge+10); }
-        translate([20+width, unit/2+0, dp]){ cylinder(d=gauge_box, h=gauge+10); }
-        translate([20+width, unit/2-3, dp]){ cylinder(d=gauge_box, h=gauge+10); }
     }
 }
 
@@ -866,12 +857,12 @@ module box(dp,u,screw_bottom_front,round_peg,screw_side_front,pi_ox=14){
         }
     }
     
-    // Screw mounts for lid. Two on each side, three if dp>90
+    // Screw mounts for lid. Two on each side, three only if dp>160
     translate([20+gauge_box, unit*u-gauge_box, gauge+10]){ rotate([0,0,-90]){ screwtrap(); } }
     translate([20+gauge_box, unit*u-gauge_box, gauge+dp-20]){ rotate([0,0,-90]){ screwtrap(); } }            
     translate([Rack_Width-20-gauge_box, unit*u-gauge_box, gauge+20]){ rotate([180,0,-90]){ screwtrap(); } }
     translate([Rack_Width-20-gauge_box, unit*u-gauge_box, gauge+dp-10]){ rotate([180,0,-90]){ screwtrap(); } }
-    if(dp>90){
+    if(dp>160){
         translate([Rack_Width-20-gauge_box, unit*u-gauge_box, gauge+dp/2+5]){ rotate([180,0,-90]){ screwtrap(); } }
         translate([20+gauge_box, unit*u-gauge_box, gauge+dp/2-5]){ rotate([0,0,-90]){ screwtrap(); } }
     }
@@ -884,12 +875,9 @@ module box(dp,u,screw_bottom_front,round_peg,screw_side_front,pi_ox=14){
         linear_extrude(dp-gauge_box){ polygon(points=[[0,0],[-3,3],[0,3]]); }
     }
         
-    // Back rest bar
-    translate([0,0,dp+gauge-2-gauge_box]){
-        difference(){
-            translate([20,0,0]){ cube([width, unit*u-gauge_box, 2]); }
-            translate([20+gauge_box+2, gauge_box+2, -1]){ cube([width-2*gauge_box-4, unit*u, 4]); }        
-        }
+    // Back rest bar (solo battuta inferiore sul fondo, senza sbalzi sulle pareti verticali)
+    translate([20+gauge_box, gauge_box, dp+gauge-2-gauge_box]){
+        cube([width-2*gauge_box, 2, 2]);
     }
               
     // Colonnine e fori di montaggio (Pegs per RPi, SSD e Step-down)
@@ -941,7 +929,7 @@ module lid(dp,u,screw_front,screw_back){
         translate([20+gauge_box+4, unit*u+0.01, gauge+dp-15]){ rotate([90,0,0]){ screw(); } }    
         translate([Rack_Width-20-gauge_box-4, unit*u+0.01, gauge+15]){ rotate([90,0,0]){ screw(); } }
         translate([Rack_Width-20-gauge_box-4, unit*u+0.01, gauge+dp-15]){ rotate([90,0,0]){ screw(); } }
-        if(dp>90){
+        if(dp>160){
             translate([Rack_Width-20-gauge_box-4, unit*u+0.01, gauge+dp/2]){ rotate([90,0,0]){ screw(); } }    
             translate([20+gauge_box+4, unit*u+0.01, gauge+dp/2]){ rotate([90,0,0]){ screw(); } }
         }
@@ -1062,13 +1050,13 @@ module screw(){
 }
 
 module screwtrap(){  
-    boss_r = (Cabinet_Fasteners == "insert_m4") ? 9.5 : 8.0;
+    w_x = (Cabinet_Fasteners == "insert_m4") ? 10.0 : 8.5;
+    w_y = (Cabinet_Fasteners == "insert_m4") ? 9.5 : 8.2;
     difference(){
-        translate([0,0,5]){
-            intersection(){
-                scale([1.1, 1.1, 0.75]){ sphere(r=boss_r); }   
-                translate([0,-0.001,-10]){ cube([22,22,22]); }
-            }
+        // Blocchetto smussato a 45 gradi (sostituisce la sfera per una stampa pulita sulle pareti verticali)
+        hull(){
+            translate([0, 0, 0.5]){ cube([0.5, w_y, 9.0]); }
+            translate([0, 0, 2.0]){ cube([w_x, w_y - 1.2, 6.0]); }
         }  
         
         // Asse di foratura allineato alla vite (lungo X a Y=4, Z=5)
