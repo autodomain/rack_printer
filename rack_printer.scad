@@ -973,7 +973,7 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     t  = (board_type == "rpipico") ? 1.0 : 1.6;
 
     z_led = (board_type == "olimex_lime2") ? (gauge + (dp - 4.0 - 21.55 + Board_Offset_Z - 40.86 - 21.55) + 76.0) :
-            (board_type == "bbb" || board_type == "bbb_cape") ? (gauge + (dp - 3.0 - 8.89 + Board_Offset_Z - 66.04 - 11.43) + 68.0) :
+            (board_type == "bbb" || board_type == "bbb_cape") ? (gauge + (dp - 3.0 - 8.89 + Board_Offset_Z - 66.04 - 11.43) + 73.5) :
             (board_type == "rpizero") ? (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 58.0 - 3.5) + 61.0) :
             (board_type == "rpipico") ? (gauge + (dp - 4.0 - 2.0 + Board_Offset_Z - 47.0 - 2.0) + 46.0) :
             (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 49.0 - 3.5) + 2.5); // rpi3 / rpi4 / rpi5
@@ -997,22 +997,22 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
     led_pairs = (board_type == "rpizero" || board_type == "rpipico") ?
                 [[led_x1, front_x1, z_led]] :
                 (board_type == "bbb" || board_type == "bbb_cape") ? [
-                    [x0 + 36.0, x0 + 34.0, z_led],
-                    [x0 + 38.4, x0 + 37.0, z_led],
-                    [x0 + 40.8, x0 + 40.0, z_led],
-                    [x0 + 43.2, x0 + 43.0, z_led],
-                    [x0 + 12.0, front_x2,  z_led + 2.0] // PWR vicino al jack 5V -> foro PWR distanziato a x0+50
+                    [x0 + 44.5, x0 + 34.0, z_led],
+                    [x0 + 46.9, x0 + 37.0, z_led],
+                    [x0 + 49.3, x0 + 40.0, z_led],
+                    [x0 + 51.7, x0 + 43.0, z_led],
+                    [x0 + 12.0, front_x2,  z_led + 0.5] // PWR vicino al jack 5V a dx -> foro PWR distanziato a x0+50
                 ] :
                 [[led_x1, front_x1, z_led], [led_x2, front_x2, z_led2]];
 
     // Render del supporto scelto (rotate([-90,0,0]) porta +Z su +Y in alto e +Y su -Z verso il fronte)
     if(board_type == "bbb" || board_type == "bbb_cape"){
-        // Pezzo unico a 4 fibre su USR0..USR3 + cappuccio singolo separato su PWR
+        // Pezzo unico a 4 fibre su USR0..USR3 (bordo sx scheda) + cappuccio singolo separato su PWR (a dx vicino jack 5V)
         color([0.92, 0.72, 0.15]){
-            translate([x0 + 36.0, y0 + t, z_led]){
+            translate([x0 + 44.5, y0 + t, z_led]){
                 rotate([-90, 0, 0]){ light_guide_bbb_usr4(fiber_d); }
             }
-            translate([x0 + 12.0, y0 + t, z_led + 2.0]){
+            translate([x0 + 12.0, y0 + t, z_led + 0.5]){
                 rotate([-90, 0, 0]){ light_guide_single(fiber_d); }
             }
         }
@@ -2009,15 +2009,15 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
                 translate([19, -1.8, 3]){ cube([14, 1.8, 15]); }
             }
 
-            // 4 LED Blu di stato Utente (USR0..USR3) vicino alla porta RJ45 Ethernet + LED PWR vicino al jack 5V
+            // 4 LED Blu di stato Utente (USR0..USR3) sul bordo sinistro della scheda + LED PWR vicino al jack 5V a destra
             color([0.1, 0.45, 0.95]){
                 for(led_i=[0:3]){
-                    translate([36 + led_i*2.4, t, 68.0]){
+                    translate([44.5 + led_i*2.4, t, 73.5]){
                         cylinder(d=1.2, h=0.6, $fn=12);
                     }
                 }
             }
-            color([0.1, 0.45, 0.95]){ translate([12.0, t, 70.0]){ cylinder(d=1.2, h=0.6, $fn=12); } }
+            color([0.1, 0.45, 0.95]){ translate([12.0, t, 74.0]){ cylinder(d=1.2, h=0.6, $fn=12); } }
 
             // Pulsanti Power, Reset, Boot
             color([0.15, 0.15, 0.15]){
