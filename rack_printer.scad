@@ -46,7 +46,7 @@ StepDown_Type = "LM2596"; // [LM2596: Modulo LM2596 / LM2596S (fori 31.5x15mm), 
 // Abilita finestra e colonnine M2 sul pannello frontale per display OLED I2C
 Enable_OLED = false;
 // Modello di display OLED I2C (rettangolare o quadrato)
-OLED_Model = "oled_096_rect"; // [oled_096_rect: Rettangolare 0.96" 128x64 (23.5x13.5mm), oled_091_wide: Rettangolare 0.91" 128x32 (26x9mm), oled_130_rect: Rettangolare 1.3" 128x64 (31.5x17.5mm), oled_150_sq: Quadrato 1.5" 128x128 (29x29mm - cons. 3U)]
+OLED_Model = "oled_096_rect"; // [oled_096_rect: Rettangolare 0.96 poll. 128x64 (23.5x13.5mm), oled_091_wide: Rettangolare 0.91 poll. 128x32 (26x9mm), oled_130_rect: Rettangolare 1.3 poll. 128x64 (31.5x17.5mm), oled_150_sq: Quadrato 1.5 poll. 128x128 (29x29mm - cons. 3U)]
 // Posizione del display OLED sul pannello frontale
 OLED_Position = "right"; // [right: A destra (sopra SSD), center: Al centro, left: A sinistra (lato scheda)]
 // Spostamento orizzontale fine del display OLED in mm
