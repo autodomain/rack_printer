@@ -8,7 +8,7 @@ $fn = 50;
 
 /* [Componente da Stampare] */
 // Seleziona il componente da stampare o visualizzare
-Part = "cabinet_assembly"; // [cabinet_assembly: Contenitore - Assieme Completo, frontplate: Contenitore - Piastra Frontale, cabinet: Contenitore - Corpo Scatola Box, lid: Contenitore - Coperchio Superiore, backplate: Contenitore - Piastra Posteriore, frame_tray: Telaio Aperto - Senza pareti e Fondo Alleggerito, board_preview: Simulazione 3D Scheda e Accessori, handles: Contenitore - Maniglie Frontali, light_guide: Supporto Fibra Ottica 1mm per LED RPi, rack_end_open: Rack Frame - Piastra Aperta, rack_end_grid: Rack Frame - Piastra con Griglia, rack_end_chimney: Rack Frame - Piastra con Feritoie, rack_end_closed: Rack Frame - Piastra Chiusa, sidepanel: Rack Frame - Pannello Laterale Chiuso, sidepanel_handle: Rack Frame - Pannello con Maniglia, trap: Rack Frame - Nutless Trap M4, tophandle: Maniglia Superiore Rack (2pz), extrusion_plain: Profilato 2020 senza fori, extrusion_front: Profilato 2020 fori frontali, extrusion_all: Profilato 2020 fori completi]
+Part = "cabinet_assembly"; // [cabinet_assembly: Contenitore - Assieme Completo, frontplate: Contenitore - Piastra Frontale, cabinet: Contenitore - Corpo Scatola Box, lid: Contenitore - Coperchio Superiore, backplate: Contenitore - Piastra Posteriore, frame_tray: Telaio Aperto - Senza pareti e Fondo Alleggerito, board_preview: Simulazione 3D Scheda e Accessori, handles: Contenitore - Maniglie Frontali, light_guide: Supporto Fibra Ottica 1mm per LED RPi, oled_clip: Staffa Fissaggio Display OLED I2C, rack_end_open: Rack Frame - Piastra Aperta, rack_end_grid: Rack Frame - Piastra con Griglia, rack_end_chimney: Rack Frame - Piastra con Feritoie, rack_end_closed: Rack Frame - Piastra Chiusa, sidepanel: Rack Frame - Pannello Laterale Chiuso, sidepanel_handle: Rack Frame - Pannello con Maniglia, trap: Rack Frame - Nutless Trap M4, tophandle: Maniglia Superiore Rack (2pz), extrusion_plain: Profilato 2020 senza fori, extrusion_front: Profilato 2020 fori frontali, extrusion_all: Profilato 2020 fori completi]
 
 /* [Simulazione 3D della Scheda nel Contenitore] */
 // Mostra il modello 3D realistico della scheda e degli accessori all'interno del cabinet per verifica visiva
@@ -292,8 +292,9 @@ module go(){
     ] : [];
     oled_pegs = Enable_OLED ? (
         (OLED_Model == "oled_091_wide") ? [
-            [oled_cx - oled_hole_dx/2, oled_cy, 4.5, 1.8, 3.5],
-            [oled_cx + oled_hole_dx/2, oled_cy, 4.5, 1.8, 3.5]
+            // Il 0.91" spesso non ha fori sul PCB: 2 colonnine laterali esterne (interasse 45mm) per staffa oled_clip
+            [oled_cx - 22.5, oled_cy, 5.5, 2.1, 3.5],
+            [oled_cx + 22.5, oled_cy, 5.5, 2.1, 3.5]
         ] : [
             [oled_cx - oled_hole_dx/2, oled_cy - oled_hole_dy/2, 4.5, 1.8, 3.5],
             [oled_cx + oled_hole_dx/2, oled_cy - oled_hole_dy/2, 4.5, 1.8, 3.5],
@@ -402,6 +403,8 @@ module go(){
         handle(Units, true);
     }else if(Part=="light_guide"){
         light_guide_bracket(Fiber_Diameter);
+    }else if(Part=="oled_clip"){
+        oled_clip_bracket(OLED_Model);
     // --- STRUTTURA DEL RACK (FRAME) ---
     }else if(Part=="rack_end_open" || Part=="g" || Part=="RackEndOpen"){
         rack_end(0);
@@ -556,10 +559,56 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
         }
     }
     
-    // Cabinet support bars (lasciano libera l'asola MicroSD a sinistra)
+    // Culla / cornice di centraggio e ritenzione sul retro per Display OLED I2C (utile specialmente per 0.91" senza fori)
+    if(Enable_OLED){
+        o_pcb_w = (OLED_Model == "oled_091_wide") ? 38.0 :
+                  (OLED_Model == "oled_130_rect") ? 35.4 :
+                  (OLED_Model == "oled_150_sq")   ? 42.0 : 27.3;
+        o_pcb_h = (OLED_Model == "oled_091_wide") ? 12.0 :
+                  (OLED_Model == "oled_130_rect") ? 33.5 :
+                  (OLED_Model == "oled_150_sq")   ? 42.0 : 27.8;
+        o_cx = ((OLED_Position == "center") ? (Rack_Width / 2) :
+                (OLED_Position == "left")   ? 60 : 135) + OLED_Offset_X;
+        o_cy = (u * unit) / 2 + OLED_Offset_Y;
+        cw = o_pcb_w + 0.6;
+        ch = o_pcb_h + 0.6;
+        wall = 1.2;
+        translate([o_cx, o_cy, gauge]){
+            difference(){
+                translate([-(cw/2 + wall), -(ch/2 + wall), 0]){
+                    cube([cw + 2*wall, ch + 2*wall, 2.5]);
+                }
+                translate([-cw/2, -ch/2, -0.5]){
+                    cube([cw, ch, 3.5]);
+                }
+                // Apertura sul lato per passaggio saldature/pin header I2C (4 pin)
+                translate([-8, -ch/2 - wall - 0.5, -0.5]){
+                    cube([16, wall + 1.5, 3.5]);
+                }
+            }
+        }
+    }
+
+    // Cabinet support bars (lasciano libera l'asola MicroSD a sinistra e la zona OLED)
     translate([0,0,gauge]){
-        translate([20+width*0.1, unit*u-1-gauge_box-0.2, 0]){ cube([width*0.8, 1, 1]); }
-        translate([20+gauge_box+pi_ox+40, gauge_box+0.2, 0]){ cube([width - (gauge_box+pi_ox+45), 1, 1]); }           
+        difference(){
+            union(){
+                translate([20+width*0.1, unit*u-1-gauge_box-0.2, 0]){ cube([width*0.8, 1, 1]); }
+                translate([20+gauge_box+pi_ox+40, gauge_box+0.2, 0]){ cube([width - (gauge_box+pi_ox+45), 1, 1]); }
+            }
+            if(Enable_OLED){
+                o_pw = (OLED_Model == "oled_091_wide") ? 41.0 :
+                       (OLED_Model == "oled_130_rect") ? 38.4 :
+                       (OLED_Model == "oled_150_sq")   ? 45.0 : 30.3;
+                o_ph = (OLED_Model == "oled_091_wide") ? 15.0 :
+                       (OLED_Model == "oled_130_rect") ? 36.5 :
+                       (OLED_Model == "oled_150_sq")   ? 45.0 : 30.8;
+                o_cx2 = ((OLED_Position == "center") ? (Rack_Width / 2) :
+                         (OLED_Position == "left")   ? 60 : 135) + OLED_Offset_X;
+                o_cy2 = (u * unit) / 2 + OLED_Offset_Y;
+                translate([o_cx2 - o_pw/2, o_cy2 - o_ph/2, -0.5]){ cube([o_pw, o_ph, 2.0]); }
+            }
+        }
     }
 }
 
@@ -1845,5 +1894,27 @@ module oled_3d_mockup(cx, cy, model="oled_096_rect"){
         color([0.15, 0.15, 0.15]){
             translate([-5, pcb_h/2 - 3.5, 1.6]){ cube([10, 2.5, 6.0]); }
         }
+    }
+}
+
+// Staffa / ponticello posteriore stampabile (senza supporti) per bloccare il display OLED 0.91" senza fori sul PCB
+// Si avvita sulle due colonnine laterali (interasse 45mm) sul retro del pannello frontale
+module oled_clip_bracket(model="oled_091_wide"){
+    span = (model == "oled_091_wide") ? 45.0 :
+           (model == "oled_130_rect") ? 30.5 :
+           (model == "oled_150_sq")   ? 36.0 : 23.0;
+    difference(){
+        union(){
+            // Traversa posteriore di bloccaggio (preme sul retro del PCB lasciando libero l'header I2C)
+            translate([-(span/2 + 4.5), -3.5, 0]){
+                cube([span + 9.0, 7.0, 2.2]);
+            }
+            // Due piedini di appoggio sulle colonnine da 3.5mm
+            translate([-span/2, 0, -1.6]){ cylinder(d=6.0, h=1.8, $fn=24); }
+            translate([ span/2, 0, -1.6]){ cylinder(d=6.0, h=1.8, $fn=24); }
+        }
+        // Fori passanti per viti M2 / M2.5
+        translate([-span/2, 0, -2.5]){ cylinder(d=2.6, h=6.0, $fn=20); }
+        translate([ span/2, 0, -2.5]){ cylinder(d=2.6, h=6.0, $fn=20); }
     }
 }
