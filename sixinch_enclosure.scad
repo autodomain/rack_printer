@@ -771,91 +771,83 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
 }
 
 
-// Staffa/convogliatore stampabile (senza supporti) per catturare la luce dai LED SMD con fibra ottica
-// Si fissa sul distanziale anteriore destro della scheda e guida le fibre verso i collarini sul frontale
-module light_guide_bracket(fiber_d=1.0, board_type=Board_Type){
+// Cappuccio / convogliatore singolo per 1 LED SMD con fibra ottica (stampabile piatto, senza supporti)
+// Isola otticamente il singolo LED e blocca per attrito la fibra ottica guidandola a 45° verso il fronte
+module light_guide_single(fiber_d=1.0){
     fh = fiber_d + 0.2; // Foro con leggero attrito per trattenere la fibra
-    screw_d = (board_type == "olimex_lime2" || board_type == "bbb" || board_type == "bbb_cape") ? 3.2 : 2.8;
-    // Coordinate LED relative al foro di fissaggio anteriore destro ([0,0]), con +Y verso il pannello frontale
-    lx1 = (board_type == "olimex_lime2") ? -6.81 :
-          (board_type == "bbb" || board_type == "bbb_cape") ? -6.0 : -6.5;
-    lx2 = (board_type == "olimex_lime2") ?  0.19 :
-          (board_type == "bbb" || board_type == "bbb_cape") ?  0.0 :  0.5;
-    ly  = (board_type == "olimex_lime2") ?  7.55 :
-          (board_type == "bbb" || board_type == "bbb_cape") ?  5.0 :  1.0;
-
-    min_x = min(0, min(lx1, lx2)) - 3.0;
-    max_x = max(0, max(lx1, lx2)) + 3.0;
-
     difference(){
         union(){
-            // Anello di fissaggio sul distanziale anteriore destro della scheda
-            cylinder(d=7.5, h=3.2, $fn=30);
-            // Piastrina di collegamento verso la zona LED
-            hull(){
-                cylinder(d=7.0, h=2.6, $fn=24);
-                translate([min_x + 1.5, ly - 1.5, 0]){ cube([max_x - min_x - 3.0, 5.5, 2.6]); }
-            }
-            // Blocchetto convogliatore sopra i due LED SMD
-            translate([min_x, ly - 2.2, 0]){
-                cube([max_x - min_x, 6.8, 7.2]);
-            }
+            // Piedino / flangia di appoggio sul PCB attorno al singolo LED
+            translate([-2.5, -2.5, 0]){ cube([5.0, 6.2, 1.2]); }
+            // Torretta di schermatura e guida fibra
+            translate([-2.2, -2.0, 0]){ cube([4.4, 5.2, 6.5]); }
         }
-        // Foro vite per fissaggio sul distanziale della scheda
-        translate([0, 0, -1]){ cylinder(d=screw_d, h=6, $fn=20); }
-        translate([0, 0, 1.5]){ cylinder(d=5.8, h=3, $fn=20); }
-
-        // Camere di cattura luce + tunnel inclinati a 45° verso il fronte per trattenere la fibra ottica
-        for(lx = [lx1, lx2]){
-            // Campana inferiore sopra il LED SMD
-            translate([lx, ly, -0.1]){ cylinder(d1=3.2, d2=fh, h=2.0, $fn=20); }
-            // Tunnel guida inclinato a 45° verso +Y (fronte)
-            translate([lx, ly, 1.5]){
-                rotate([-45, 0, 0]){
-                    cylinder(d=fh, h=11.0, $fn=20);
-                }
+        // Campana inferiore centrata sul singolo LED SMD
+        translate([0, 0, -0.1]){ cylinder(d1=3.2, d2=fh, h=1.8, $fn=20); }
+        // Tunnel guida inclinato a 45° verso +Y (fronte)
+        translate([0, 0, 1.3]){
+            rotate([-45, 0, 0]){
+                cylinder(d=fh, h=10.5, $fn=20);
             }
         }
     }
 }
 
-// Simulazione 3D del convogliatore montato sulla scheda e delle fibre ottiche fino al pannello frontale
+// Genera i cappucci per singolo LED necessari alla scheda selezionata (1 per Zero/Pico, 2 per tutte le altre)
+module light_guide_bracket(fiber_d=1.0, board_type=Board_Type){
+    count = (board_type == "rpizero" || board_type == "rpipico") ? 1 : 2;
+    for(i = [0 : count - 1]){
+        translate([i * 9.0, 0, 0]){
+            light_guide_single(fiber_d);
+        }
+    }
+}
+
+// Simulazione 3D dei cappucci per singolo LED montati su tutte le schede e relative fibre ottiche fino al frontale
 module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0){
     x0 = 20 + gauge_box + pi_ox;
     y0 = 6.0;
     t  = 1.6;
-    hole_x = (board_type == "olimex_lime2") ? (x0 + 54.81) : (x0 + 52.5);
-    z_hole = (board_type == "olimex_lime2") ?
-             (gauge + (dp - 4.0 - 21.55 + Board_Offset_Z - 40.86 - 21.55) + 21.55) :
-             (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 49.0));
 
+    // Coordinate Z anteriori reali di ciascuna scheda
+    z_led = (board_type == "olimex_lime2") ? (gauge + (dp - 4.0 - 21.55 + Board_Offset_Z - 40.86 - 21.55) + 14.0) :
+            (board_type == "bbb" || board_type == "bbb_cape") ? (gauge + (dp - 4.0 - 16.0 + Board_Offset_Z - 66.1 - 16.0) + 11.5) :
+            (board_type == "rpizero") ? (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 58.0 - 3.5) + 6.0) :
+            (board_type == "rpipico") ? (gauge + (dp - 4.0 - 2.0 + Board_Offset_Z - 47.0 - 2.0) + 5.0) :
+            (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 49.0 - 3.5) + 8.0); // rpi3 / rpi4 / rpi5
+
+    // Coordinate X dei LED sulla scheda (allineate ai fori frontali PWR / ACT)
     led_x1 = (board_type == "olimex_lime2") ? (x0 + 48.0) :
              (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 42.0) :
              (board_type == "rpizero") ? (x0 + 23.0) :
              (board_type == "rpipico") ? (x0 + 10.5) : (x0 + 46.0);
-    led_x2 = (board_type == "olimex_lime2") ? (x0 + 55.0) :
-             (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 48.0) : (x0 + 53.0);
+    led_x2 = (board_type == "olimex_lime2") ? (x0 + 54.0) :
+             (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 48.0) : (x0 + 51.0);
 
-    z_led = (board_type == "olimex_lime2") ? (z_hole - 7.55) : (z_hole - 1.0);
+    front_x1 = led_x1;
+    front_x2 = (board_type == "olimex_lime2") ? (x0 + 55.0) :
+               (board_type == "bbb" || board_type == "bbb_cape") ? (x0 + 48.0) : (x0 + 53.0);
+
     z_front = gauge + 4.5;
+    led_pairs = (board_type == "rpizero" || board_type == "rpipico") ?
+                [[led_x1, front_x1]] :
+                [[led_x1, front_x1], [led_x2, front_x2]];
 
-    // Staffa montata sul distanziale anteriore destro (ruotata sul piano XZ della scheda)
-    if(board_type == "olimex_lime2" || board_type == "rpi3" || board_type == "rpi4" || board_type == "rpi5"){
+    for(p = led_pairs){
+        lx = p[0];
+        fx = p[1];
+        // Cappuccio singolo montato direttamente sopra il LED SMD
         color([0.92, 0.72, 0.15]){
-            translate([hole_x, y0 + t, z_hole]){
+            translate([lx, y0 + t, z_led]){
                 rotate([90, 0, 0]){
-                    light_guide_bracket(fiber_d, board_type);
+                    light_guide_single(fiber_d);
                 }
             }
         }
-    }
-
-    // Fibre ottiche simulate dal convogliatore LED ai collarini sul pannello frontale
-    fiber_list = (board_type == "rpizero" || board_type == "rpipico") ? [led_x1] : [led_x1, led_x2];
-    for(fx = fiber_list){
+        // Fibra ottica dal cappuccio singolo fino al collarino sul pannello frontale
         color([0.20, 0.85, 1.00, 0.85]){
             hull(){
-                translate([fx, y0 + t + 3.5, z_led - 3.5]){ sphere(d=fiber_d, $fn=12); }
+                translate([lx, y0 + t + 3.2, z_led - 3.2]){ sphere(d=fiber_d, $fn=12); }
                 translate([fx, 5.0, (z_led + z_front)/2]){ sphere(d=fiber_d, $fn=12); }
             }
             hull(){
