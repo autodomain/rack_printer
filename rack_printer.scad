@@ -975,7 +975,7 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
             (board_type == "bbb" || board_type == "bbb_cape") ? (gauge + (dp - 3.0 - 8.89 + Board_Offset_Z - 66.04 - 11.43) + 76.0) :
             (board_type == "rpizero") ? (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 58.0 - 3.5) + 61.0) :
             (board_type == "rpipico") ? (gauge + (dp - 4.0 - 2.0 + Board_Offset_Z - 47.0 - 2.0) + 46.0) :
-            (gauge + (dp - 3.0 - 3.5 + Board_Offset_Z - 49.0 - 3.5) + 2.5); // rpi3 / rpi4 / rpi5
+            (gauge + (dp - 3.0 - 23.5 + Board_Offset_Z - 58.0 - 3.5) + 2.5); // rpi3 / rpi4 / rpi5
     z_led2 = (board_type == "olimex_lime2") ? (z_led - 3.5) : z_led;
 
     led_x1 = (board_type == "olimex_lime2") ? (x0 + 58.2) :
