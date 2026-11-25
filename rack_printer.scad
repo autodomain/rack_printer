@@ -61,9 +61,9 @@ Rear_DC_Jack_Dia = 8.0; // [8.0: DC-022 Standard (foro 8.0 mm), 11.2: DC-099 Met
 // Posizione del jack DC sul pannello posteriore
 Rear_DC_Jack_Pos = "right"; // [right: A destra (lato accessori/SSD), center: Al centro, left: A sinistra (lato scheda)]
 // Spostamento orizzontale fine jack DC posteriore in mm
-Rear_DC_Jack_Offset_X = 0; // [-50:0.5:50]
+Rear_DC_Jack_Offset_X = 0; // [-70:0.5:70]
 // Spostamento verticale fine jack DC posteriore in mm
-Rear_DC_Jack_Offset_Y = 0; // [-8:0.5:15]
+Rear_DC_Jack_Offset_Y = 0; // [-10:0.5:30]
 
 /* [Posizionamento Accessori Interni (mm)] */
 // Orientamento connettori disco SSD 2.5"
