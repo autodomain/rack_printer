@@ -344,9 +344,8 @@ module go(){
             [pi_offset_x + 34, 5, 16, 12]  // USB 2.0 Type-A Host
         ] :
         (Board_Type == "olimex_lime2") ? [
-            [pi_offset_x + 3.5,  5, 17, 15],   // RJ45 Gigabit Ethernet (centro a 12.06mm / 475mil)
-            [pi_offset_x + 20.5, 5, 22.5, 12], // Dual USB 2.0 Host (centri a 26.04mm e 35.69mm)
-            [pi_offset_x + 45.0, 5, 11, 12]    // 5V DC Power Barrel Jack (angolo alto)
+            [pi_offset_x + 3.2,  5, 17.2, 15.0], // RJ45 Gigabit Ethernet (centro 12.06mm / 475mil)
+            [pi_offset_x + 21.9, 5, 36.6, 16.5]  // 2x USB 2.0 Verticali + Batteria LiPo JST + 5V DC Barrel Jack
         ] :
         (Board_Type == "rpizero") ? [
             [pi_offset_x + 4,  5, 10, 8],  // MicroUSB Data OTG
@@ -1717,25 +1716,26 @@ module board_3d_mockup(board_type="rpi4", pi_ox=14, dp=115, inc_ssd=true, inc_st
             // Porte Posteriori (lato corto 59.61mm verso il retro - quote ufficiali Olimex):
             // 1. RJ45 Gigabit Ethernet (centro 475mil = 12.06mm)
             color([0.78, 0.78, 0.80]){ translate([4.0, t, l - 16]){ cube([16, 13.5, 18.5]); } }
-            // 2. USB 2.0 Host 1 (centro 1025mil = 26.04mm) & USB 2.0 Host 2 (centro 1405mil = 35.69mm)
+            // 2. 2x USB 2.0 Host VERTICALI (centri 1025mil = 26.04mm e 1405mil = 35.69mm)
             color([0.82, 0.82, 0.84]){
-                translate([21.0, t, l - 13]){ cube([9.0, 7.0, 15.5]); }
-                translate([31.0, t, l - 13]){ cube([9.0, 7.0, 15.5]); }
+                translate([22.3, t, l - 13]){ cube([7.5, 14.5, 15.5]); }
+                translate([31.9, t, l - 13]){ cube([7.5, 14.5, 15.5]); }
             }
-            // 3. 5V DC Barrel Jack (angolo posteriore superiore)
-            color([0.16, 0.16, 0.16]){ translate([45.5, t, l - 10]){ cube([9.5, 11.0, 12.5]); } }
+            // 3. Connettore Batteria LiPo JST 2-pin (centro 1710mil = 43.43mm)
+            color([0.92, 0.92, 0.90]){ translate([40.5, t, l - 7.5]){ cube([6.0, 6.0, 8.0]); } }
+            // 4. 5V DC Barrel Jack (angolo posteriore superiore)
+            color([0.16, 0.16, 0.16]){ translate([48.0, t, l - 10]){ cube([9.5, 11.0, 12.5]); } }
             color([0.80, 0.80, 0.82]){
-                translate([50.25, t + 5.5, l + 2.5]){
+                translate([52.75, t + 5.5, l + 2.5]){
                     rotate([90, 0, 0]){ cylinder(d=5.5, h=2.0, $fn=24); }
                 }
             }
 
             // Connettori sul lato corto anteriore (fronte):
-            // Mini-USB OTG, HDMI Standard, SATA Nativo 7-pin + LiPo JST
+            // Mini-USB OTG, HDMI Standard, SATA Nativo 7-pin
             color([0.80, 0.80, 0.82]){ translate([4.5, t, -2.0]){ cube([8.5, 4.0, 9.0]); } }   // Mini-USB OTG
             color([0.80, 0.80, 0.82]){ translate([21.0, t, -2.5]){ cube([15.0, 6.5, 12.0]); } } // HDMI Standard
             color([0.16, 0.16, 0.16]){ translate([38.5, t, -1.5]){ cube([12.0, 7.5, 7.0]); } }  // SATA 7-pin
-            color([0.90, 0.90, 0.88]){ translate([52.0, t, 1.0]){ cube([6.5, 4.5, 5.5]); } }   // Batteria LiPo JST
 
             // Header espansione GPIO-1/2/3 e LCD lungo i lati lunghi (caratteristici Olimex LIME2)
             color([0.15, 0.15, 0.15]){
