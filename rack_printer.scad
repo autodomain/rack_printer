@@ -119,12 +119,12 @@ Front_LED_Offset_Y = 0; // [-8:0.5:30]
 /* [9. Raffreddamento - Ventole Retro & Feritoie Frontali] */
 // Abilita ventola/e di raffreddamento sul pannello posteriore
 Enable_Rear_Fan = false;
-// Dimensione ventola assiale standard in mm (2507 minima per 2U; 30/40mm per 3U+; 50/60mm per 4U/5U+)
-Rear_Fan_Size = 25; // [25: 25x25x7 mm (2507 - fori 20mm - Ideale 2U), 30: 30x30 mm (fori 24mm - 3U+), 40: 40x40 mm (fori 32mm - 3U+), 50: 50x50 mm (fori 40mm - 4U+), 60: 60x60 mm (fori 50mm - 5U+)]
+// Dimensione ventola assiale standard in mm (2006 o 2507 ideali per 2U; 30/40mm per 3U+; 50/60mm per 4U/5U+)
+Rear_Fan_Size = 25; // [20: 20x20x6 mm (2006 - fori 16mm - Ideale 2U), 25: 25x25x7 mm (2507 - fori 20mm - Ideale 2U), 30: 30x30 mm (fori 24mm - 3U+), 40: 40x40 mm (fori 32mm - 3U+), 50: 50x50 mm (fori 40mm - 4U+), 60: 60x60 mm (fori 50mm - 5U+)]
 // Numero di ventole sul pannello posteriore
 Rear_Fan_Count = 1; // [1: 1 Ventola, 2: 2 Ventole]
 // Interasse orizzontale tra le 2 ventole in mm (attivo se 2 ventole)
-Rear_Fan_Spacing = 30; // [26:1:90]
+Rear_Fan_Spacing = 30; // [22:1:90]
 // Posizione principale ventola/e sul pannello posteriore
 Rear_Fan_Pos = "right"; // [right: A destra (zona libera tra scheda e jack DC), center: Al centro, left: A sinistra]
 // Spostamento orizzontale fine ventola/e posteriori in mm
@@ -1406,18 +1406,19 @@ module back_plate(u,dp,screw_top,screw_bottom,screw_side,square_hole,round_hole)
             }
         }
 
-        // Ventole di raffreddamento posteriori (2507 / 30 / 40 / 50 / 60 mm, 1 o 2 ventole)
+        // Ventole di raffreddamento posteriori (2006 / 2507 / 30 / 40 / 50 / 60 mm, 1 o 2 ventole)
         if(Enable_Rear_Fan){
             fan_base_x = ((Rear_Fan_Pos == "left")  ? (20 + gauge_box + 32) :
                           (Rear_Fan_Pos == "right") ? (Rack_Width - 20 - gauge_box - 58) :
                           (Rack_Width / 2)) + Rear_Fan_Offset_X;
             fan_cy     = (u * unit) / 2 + Rear_Fan_Offset_Y;
-            fan_hole_d = Rear_Fan_Size - 3.0;
-            fan_pitch  = (Rear_Fan_Size == 25) ? 20 :
+            fan_hole_d = Rear_Fan_Size - ((Rear_Fan_Size == 20) ? 2.5 : 3.0);
+            fan_pitch  = (Rear_Fan_Size == 20) ? 16 :
+                         (Rear_Fan_Size == 25) ? 20 :
                          (Rear_Fan_Size == 30) ? 24 :
                          (Rear_Fan_Size == 40) ? 32 :
                          (Rear_Fan_Size == 50) ? 40 : 50;
-            fan_scr_d  = (Rear_Fan_Size >= 50) ? 4.3 : (Rear_Fan_Size == 25) ? 2.7 : 3.3;
+            fan_scr_d  = (Rear_Fan_Size >= 50) ? 4.3 : (Rear_Fan_Size <= 25) ? 2.6 : 3.3;
             fan_offsets = (Rear_Fan_Count == 2) ? [-Rear_Fan_Spacing/2, Rear_Fan_Spacing/2] : [0];
 
             for(dx = fan_offsets){
@@ -2465,7 +2466,7 @@ module fan_3d_mockup(u=Units, dp=Depth){
                   (Rear_Fan_Pos == "right") ? (Rack_Width - 20 - gauge_box - 58) :
                   (Rack_Width / 2)) + Rear_Fan_Offset_X;
     fan_cy     = (u * unit) / 2 + Rear_Fan_Offset_Y;
-    fan_t      = (Rear_Fan_Size == 25) ? 7.0 : (Rear_Fan_Size >= 50) ? 15.0 : 10.0;
+    fan_t      = (Rear_Fan_Size == 20) ? 6.0 : (Rear_Fan_Size == 25) ? 7.0 : (Rear_Fan_Size >= 50) ? 15.0 : 10.0;
     fan_z      = gauge + dp - gauge_box - fan_t;
     fan_offsets = (Rear_Fan_Count == 2) ? [-Rear_Fan_Spacing/2, Rear_Fan_Spacing/2] : [0];
     for(dx = fan_offsets){
