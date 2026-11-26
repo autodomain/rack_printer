@@ -8,7 +8,7 @@ $fn = 50;
 
 /* [1. Generale & Componente] */
 // Seleziona il componente da stampare o visualizzare
-Part = "cabinet_assembly"; // [cabinet_assembly: Contenitore - Assieme Completo, frontplate: Contenitore - Piastra Frontale, cabinet: Contenitore - Corpo Scatola Box, lid: Contenitore - Coperchio Superiore, backplate: Contenitore - Piastra Posteriore, frame_tray: Telaio Aperto - Senza pareti e Fondo Alleggerito, board_preview: Simulazione 3D Scheda e Accessori, handles: Contenitore - Maniglie Frontali, light_guide: Supporto Fibra Ottica 1mm per LED RPi, oled_clip: Staffa Fissaggio Display OLED I2C, rack_end_open: Rack Frame - Piastra Aperta, rack_end_grid: Rack Frame - Piastra con Griglia, rack_end_chimney: Rack Frame - Piastra con Feritoie, rack_end_closed: Rack Frame - Piastra Chiusa, sidepanel: Rack Frame - Pannello Laterale Chiuso, sidepanel_handle: Rack Frame - Pannello con Maniglia, trap: Rack Frame - Nutless Trap M4, tophandle: Maniglia Superiore Rack (2pz), extrusion_plain: Profilato 2020 senza fori, extrusion_front: Profilato 2020 fori frontali, extrusion_all: Profilato 2020 fori completi]
+Part = "cabinet_assembly"; // [cabinet_assembly: Contenitore - Assieme Completo, frontplate: Contenitore - Piastra Frontale, cabinet: Contenitore - Corpo Scatola Box, lid: Contenitore - Coperchio Superiore, backplate: Contenitore - Piastra Posteriore, frame_tray: Telaio Aperto - Senza pareti e Fondo Alleggerito, board_preview: Simulazione 3D Scheda e Accessori, handles: Contenitore - Maniglie Frontali, light_guide: Supporto Fibra Ottica 1mm per LED RPi, rack_end_open: Rack Frame - Piastra Aperta, rack_end_grid: Rack Frame - Piastra con Griglia, rack_end_chimney: Rack Frame - Piastra con Feritoie, rack_end_closed: Rack Frame - Piastra Chiusa, sidepanel: Rack Frame - Pannello Laterale Chiuso, sidepanel_handle: Rack Frame - Pannello con Maniglia, trap: Rack Frame - Nutless Trap M4, tophandle: Maniglia Superiore Rack (2pz), extrusion_plain: Profilato 2020 senza fori, extrusion_front: Profilato 2020 fori frontali, extrusion_all: Profilato 2020 fori completi]
 
 // Mostra il modello 3D realistico della scheda e degli accessori all'interno del cabinet per verifica visiva
 Show_Board_Mockup = true;
@@ -341,8 +341,6 @@ module go(){
     oled_sq = Enable_OLED ? [
         [oled_cx - oled_win_w/2, oled_cy - oled_win_h/2, oled_win_w, oled_win_h]
     ] : [];
-    // Fissaggio integrato a incastro/slitta direttamente nel pannello frontale (senza viti)
-    oled_pegs = [];
     all_front_sq = concat(rpi_front_sq, oled_sq);
 
     // Fori per fibra ottica LED di stato (PWR sempre nella stessa posizione relativa; spostabili tramite Front_LED_Pos/Offset)
@@ -420,7 +418,7 @@ module go(){
         rotate([90,0,0]){
             if(Show_Board_Mockup && Board_Type != "none"){
                 // Involucro semitrasparente (%) per ispezione interna visiva a raggi X
-                %frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
+                %frontplate(Units, all_front_sq, rpi_front_rd, [], screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
                 %cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
                 %lid(eff_depth, Units, [screw_pos], [screw_pos]);
                 %back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, dc_rear_rd);
@@ -439,7 +437,7 @@ module go(){
                     light_guide_3d_mockup(Board_Type, pi_offset_x, eff_depth, Fiber_Diameter);
                 }
             } else {
-                frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
+                frontplate(Units, all_front_sq, rpi_front_rd, [], screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
                 cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
                 lid(eff_depth, Units, [screw_pos], [screw_pos]);
                 back_plate(Units, eff_depth, [screw_pos], [screw_pos], screw_side_list, rpi_rear_sq, dc_rear_rd);
@@ -466,7 +464,7 @@ module go(){
         }
     }else if(Part=="frontplate" || Part=="b" || Part=="FrontPlate"){
         // Pronto per la stampa 3D (piatto sul piano di stampa XY)
-        frontplate(Units, all_front_sq, rpi_front_rd, oled_pegs, screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
+        frontplate(Units, all_front_sq, rpi_front_rd, [], screw_side_list, [screw_pos], [screw_pos], pi_offset_x);
     }else if(Part=="cabinet" || Part=="c" || Part=="Cabinet"){
         // Corpo scatola: se Show_Board_Mockup e attivo, mostra anche la scheda e gli accessori montati all'interno!
         cabinet(eff_depth, Units, [screw_pos], all_pegs, screw_side_list, pi_offset_x);
@@ -483,8 +481,6 @@ module go(){
         handle(Units, true);
     }else if(Part=="light_guide"){
         light_guide_bracket(Fiber_Diameter, Board_Type);
-    }else if(Part=="oled_clip"){
-        oled_clip_bracket(OLED_Model);
     // --- STRUTTURA DEL RACK (FRAME) ---
     }else if(Part=="rack_end_open" || Part=="g" || Part=="RackEndOpen"){
         rack_end(0);
@@ -2357,30 +2353,6 @@ module oled_3d_mockup(cx, cy, model="oled_096_rect"){
                 translate([-5.0, pcb_h/2 - 3.0, 1.6]){ cube([10.0, 2.5, 6.0]); }
             }
         }
-    }
-}
-
-// Staffa / ponticello posteriore stampabile (senza supporti) per bloccare il display OLED / LCD
-// Si avvita sulle due colonnine laterali sul retro del pannello frontale
-module oled_clip_bracket(model="oled_091_wide"){
-    span = (model == "oled_091_wide") ? 45.0 :
-           (model == "oled_130_rect") ? 30.5 :
-           (model == "oled_150_sq")   ? 36.0 :
-           (model == "lcd_1602")      ? 75.0 :
-           (model == "lcd_2004")      ? 93.0 : 23.0;
-    difference(){
-        union(){
-            // Traversa posteriore di bloccaggio (preme sul retro del PCB lasciando libero l'header I2C)
-            translate([-(span/2 + 4.5), -3.5, 0]){
-                cube([span + 9.0, 7.0, 2.2]);
-            }
-            // Due piedini di appoggio sulle colonnine da 3.5mm
-            translate([-span/2, 0, -1.6]){ cylinder(d=6.0, h=1.8, $fn=24); }
-            translate([ span/2, 0, -1.6]){ cylinder(d=6.0, h=1.8, $fn=24); }
-        }
-        // Fori passanti per viti M2 / M2.5
-        translate([-span/2, 0, -2.5]){ cylinder(d=2.6, h=6.0, $fn=20); }
-        translate([ span/2, 0, -2.5]){ cylinder(d=2.6, h=6.0, $fn=20); }
     }
 }
 
