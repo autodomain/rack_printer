@@ -1123,19 +1123,26 @@ module light_guide_3d_mockup(board_type, pi_ox, dp, fiber_d=1.0, style=LED_Guide
 // Feritoie di raffreddamento estese a tutto il fondo del contenitore
 // Garantiscono la massima ventilazione mantenendo piazzole piene di supporto sotto ogni colonnina e vite
 module cabinet_bottom_cooling(dp=Depth, w=width, pi_ox=14, round_peg=[]){
-    slot_len = max(15, dp - 20);
-    slot_z   = gauge + 10;
+    slot_len   = max(15, dp - 20);
+    slot_z     = gauge + 10;
+    slot_pitch = 12;
+    slot_w     = 3.5;
+    usable_w   = max(slot_pitch, w - 20);
+    slot_count = floor(usable_w / slot_pitch);
+    slot_span  = slot_count * slot_pitch;
+    start_x    = 20 + (w - slot_span) / 2;
     
     difference(){
-        // 1. Serie completa di feritoie longitudinali (estrusione 2D pulita per garantire 2-manifold perfetto in CGAL)
+        // 1. Serie ridotta di feritoie longitudinali (passo 12mm, larghezza 3.5mm per stampa piu veloce)
         union(){
-            for(x = [29 : 5.5 : 20 + w - 9]){
+            for(i = [0 : slot_pitch : slot_span]){
+                x = start_x + i;
                 translate([x, gauge_box + 2, slot_z]){
                     rotate([90, 0, 0]){
                         linear_extrude(gauge_box + 4){
                             hull(){
-                                translate([0, 0]){ circle(d=2.5, $fn=24); }
-                                translate([0, slot_len]){ circle(d=2.5, $fn=24); }
+                                translate([0, 0]){ circle(d=slot_w, $fn=24); }
+                                translate([0, slot_len]){ circle(d=slot_w, $fn=24); }
                             }
                         }
                     }
@@ -1402,18 +1409,19 @@ module handle2(w,h,d,ra){
 }
 
 
-// Feritoie di ventilazione
+// Feritoie di ventilazione superiori (passo 15mm, larghezza 3mm per stampa piu veloce)
 module chimney(dp=Depth, w=width) {    
     slot_len     = min(60, max(20, dp - 40));
     slot_z       = (dp > 40) ? (dp - slot_len)/2 : 10;
-    slot_count   = floor((w - 40) / 8);
-    slot_span    = max(8, slot_count * 8);
+    slot_pitch   = 15;
+    slot_count   = max(1, floor((w - 40) / slot_pitch));
+    slot_span    = slot_count * slot_pitch;
     slot_x_start = 20 + (w - slot_span)/2;
-    for(i=[0:8:slot_span]){
+    for(i=[0:slot_pitch:slot_span]){
         translate([slot_x_start + i, -1, slot_z]){
             minkowski(){
                 cube([0.01, 200, slot_len]);    
-                sphere(d=2);        
+                sphere(d=3);        
             }
         }
     }
@@ -1525,14 +1533,14 @@ module rack_end(type){
         translate([10, rd - 10, -0.1])      { cylinder(d=5, h=10); cylinder(d1=10, d2=6, h=3.5); }
         translate([rw - 10, rd - 10, -0.1]) { cylinder(d=5, h=10); cylinder(d1=10, d2=6, h=3.5); }  
       
-        // Feritoie di aerazione (type 2: chimney) - 4 file perfettamente centrate in X e Y
+        // Feritoie di aerazione (type 2: chimney) - 4 file centrate, passo 14mm per stampa piu veloce
         if(type==2){
             row_len      = 24;  // Lunghezza feritoia lungo Y
             row_pitch    = 34;  // Passo tra le 4 file lungo Y
             cy           = rd / 2;
             cx           = rw / 2;
-            slot_pitch_x = 7.5;
-            num_slots    = 17;  // 17 feritoie per fila (campata 120mm simmetrica)
+            slot_pitch_x = 14.0;
+            num_slots    = 9;   // 9 feritoie per fila (campata 112mm simmetrica)
             span_x       = (num_slots - 1) * slot_pitch_x;
             start_x      = cx - span_x / 2;
             
@@ -1543,7 +1551,7 @@ module rack_end(type){
                     sx = start_x + s * slot_pitch_x;
                     translate([sx, ry, -1]){
                         minkowski(){
-                            cube([0.5, row_len - 2, gauge + 2]);
+                            cube([1.5, row_len - 2, gauge + 2]);
                             cylinder(r=1, h=0.01, $fn=16);
                         }
                     }
