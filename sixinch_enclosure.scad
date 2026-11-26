@@ -709,61 +709,89 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
         }
     }
     
-    // Culla / slitta a incastro integrata sul retro per Display OLED I2C o LCD (senza viti, con apertura contatti)
+    // Culla / slitta a incastro elastico integrata sul retro per Display OLED I2C o LCD (senza viti, con apertura contatti)
     if(Enable_OLED){
         o_pcb_w = (OLED_Model == "oled_091_wide") ? 38.0 :
                   (OLED_Model == "oled_130_rect") ? 35.4 :
                   (OLED_Model == "oled_150_sq")   ? 42.0 :
                   (OLED_Model == "lcd_1602")      ? 80.0 :
-                  (OLED_Model == "lcd_2004")      ? 98.0 : 27.3;
+                  (OLED_Model == "lcd_2004")      ? 98.0 : 27.5;
         o_pcb_h = (OLED_Model == "oled_091_wide") ? 12.0 :
                   (OLED_Model == "oled_130_rect") ? 33.5 :
                   (OLED_Model == "oled_150_sq")   ? 42.0 :
                   (OLED_Model == "lcd_1602")      ? 36.0 :
-                  (OLED_Model == "lcd_2004")      ? 60.0 : 27.8;
+                  (OLED_Model == "lcd_2004")      ? 60.0 : 28.0;
         o_cx = ((OLED_Position == "center") ? (Rack_Width / 2) :
                 (OLED_Position == "left")   ? 60 : 135) + OLED_Offset_X;
         o_cy = (u * unit) / 2 + OLED_Offset_Y;
-        cw = o_pcb_w + 0.6;
-        ch = o_pcb_h + 0.6;
+        cw = o_pcb_w + 1.0; // 0.5mm gioco per lato per inserimento agevole
+        ch = o_pcb_h + 1.0;
         wall = 1.4;
+        wall_h = 3.8;       // Altezza maggiorata per PCB + spessore vetro/biadesivo (luce utile 2.5mm)
+        tab_w = min(12.0, cw * 0.45);
         translate([o_cx, o_cy, gauge]){
             difference(){
                 union(){
                     // Cornice perimetrale di guida PCB
                     translate([-(cw/2 + wall), -(ch/2 + wall), 0]){
-                        cube([cw + 2*wall, ch + 2*wall, 2.8]);
+                        cube([cw + 2*wall, ch + 2*wall, wall_h]);
                     }
                 }
                 // Vano interno PCB
                 translate([-cw/2, -ch/2, -0.5]){
-                    cube([cw, ch, 3.8]);
+                    cube([cw, ch, wall_h + 1.0]);
                 }
                 // Apertura per passaggio contatti elettrici / header I2C 4-pin (a sx guardando dal fronte = +X per 0.91" e LCD, in alto = +Y per gli altri OLED)
                 if(OLED_Model == "oled_091_wide" || OLED_Model == "lcd_1602" || OLED_Model == "lcd_2004"){
-                    translate([cw/2 - 0.5, -5.5, -0.5]){
-                        cube([wall + 1.5, 11.0, 3.8]);
+                    translate([cw/2 - 0.5, -6.0, -0.5]){
+                        cube([wall + 1.5, 12.0, wall_h + 1.0]);
                     }
                 } else {
-                    translate([-5.5, ch/2 - 0.5, -0.5]){
-                        cube([11.0, wall + 1.5, 3.8]);
+                    translate([-6.0, ch/2 - 0.5, -0.5]){
+                        cube([12.0, wall + 1.5, wall_h + 1.0]);
+                    }
+                }
+                // Tagli di scarico sui 2 lati continui (senza apertura contatti) per rendere elastiche le linguette a scatto
+                if(OLED_Model == "oled_091_wide" || OLED_Model == "lcd_1602" || OLED_Model == "lcd_2004"){
+                    for(sy = [-1, 1]){
+                        for(sx = [-1, 1]){
+                            translate([sx * (tab_w/2 + 0.4) - 0.4, sy * (ch/2 + wall/2) - (wall/2 + 0.5), 0.6]){
+                                cube([0.8, wall + 1.0, wall_h]);
+                            }
+                        }
+                    }
+                } else {
+                    for(sx = [-1, 1]){
+                        for(sy = [-1, 1]){
+                            translate([sx * (cw/2 + wall/2) - (wall/2 + 0.5), sy * (tab_w/2 + 0.4) - 0.4, 0.6]){
+                                cube([wall + 1.0, 0.8, wall_h]);
+                            }
+                        }
                     }
                 }
             }
-            // Due labbri di ritenzione elastica a scatto (snap-in) sui lati lunghi (senza viti, spessore 0.8mm con invito a 45°)
-            for(sy = [-1, 1]){
-                translate([-cw/4, sy * (ch/2 - 0.55), 1.8]){
-                    cube([cw/2, 1.1, 1.0]);
-                }
-            }
-            // Fermo elastico a scatto sul lato opposto ai contatti
+            // Due linguette elastiche a scatto (snap-in) sui 2 lati continui + fermo sul lato opposto ai contatti (luce Z = 2.5mm)
             if(OLED_Model == "oled_091_wide" || OLED_Model == "lcd_1602" || OLED_Model == "lcd_2004"){
-                translate([-(cw/2 + 0.45), -4.0, 1.8]){
-                    cube([0.9, 8.0, 1.0]);
+                for(sy = [-1, 1]){
+                    hull(){
+                        translate([-tab_w/2, sy * (ch/2 - 0.35) - 0.35, 2.5]){ cube([tab_w, 0.7, 0.5]); }
+                        translate([-tab_w/2, sy * (ch/2 + 0.1)  - 0.1,  wall_h - 0.2]){ cube([tab_w, 0.2, 0.2]); }
+                    }
+                }
+                hull(){
+                    translate([-(cw/2 - 0.05), -4.0, 2.5]){ cube([0.6, 8.0, 0.5]); }
+                    translate([-(cw/2 + 0.1),  -4.0, wall_h - 0.2]){ cube([0.2, 8.0, 0.2]); }
                 }
             } else {
-                translate([-4.0, -(ch/2 + 0.45), 1.8]){
-                    cube([8.0, 0.9, 1.0]);
+                for(sx = [-1, 1]){
+                    hull(){
+                        translate([sx * (cw/2 - 0.35) - 0.35, -tab_w/2, 2.5]){ cube([0.7, tab_w, 0.5]); }
+                        translate([sx * (cw/2 + 0.1)  - 0.1,  -tab_w/2, wall_h - 0.2]){ cube([0.2, tab_w, 0.2]); }
+                    }
+                }
+                hull(){
+                    translate([-4.0, -(ch/2 - 0.05), 2.5]){ cube([8.0, 0.6, 0.5]); }
+                    translate([-4.0, -(ch/2 + 0.1),  wall_h - 0.2]){ cube([8.0, 0.2, 0.2]); }
                 }
             }
         }
