@@ -1716,33 +1716,12 @@ module wedge(){
     }
 }
 
-// Telaio aperto (frame tray) forzato alla profondita del telaio rack, con viti sia avanti che indietro
+// Telaio aperto (frame tray) solo piano senza pareti laterali, forzato alla profondita del telaio rack con viti avanti e indietro
 module frame_tray(dp=Rack_Depth - 2*gauge, u=Units, w=width, screw_bottom_front=[screw_pos], screw_side_front=[0.5]){
-    h = u * unit;
-    
     difference(){
-        union(){
-            // Parete laterale sinistra
-            translate([20, 0, gauge]){
-                cube([gauge_box, h, dp]);
-            }
-            // Parete laterale destra
-            translate([20 + w - gauge_box, 0, gauge]){
-                cube([gauge_box, h, dp]);
-            }
-            
-            // Fondo strutturale con bordi e traversi di rinforzo
-            translate([20, 0, gauge]){
-                cube([w, gauge_box, dp]);
-            }
-            
-            // Nervature superiori di irrigidimento sulle pareti laterali
-            translate([20, h - 2, gauge]){
-                cube([4, 2, dp]);
-            }
-            translate([20 + w - 4, h - 2, gauge]){
-                cube([4, 2, dp]);
-            }
+        // Fondo strutturale piano con bordi di rinforzo
+        translate([20, 0, gauge]){
+            cube([w, gauge_box, dp]);
         }
         
         // Fondo a griglia quadrata (per il passaggio di fascette da 2.5mm/3.6mm/4.8mm e viti M3/M4 con rondelle)
@@ -1751,7 +1730,7 @@ module frame_tray(dp=Rack_Depth - 2*gauge, u=Units, w=width, screw_bottom_front=
         pitch     = hole_size + rib_size; // 12 mm
         
         margin_x  = 8;
-        margin_z  = 8;
+        margin_z  = 12;
         
         cols = floor((w - 2 * margin_x) / pitch);
         rows = floor((dp - 2 * margin_z) / pitch);
@@ -1781,17 +1760,6 @@ module frame_tray(dp=Rack_Depth - 2*gauge, u=Units, w=width, screw_bottom_front=
             translate([Rack_Width-p+5, gauge_box, gauge]){ rotate([0,-90,0]){ screwtrap(); } }
             translate([p-5, gauge_box, gauge+dp-gauge_box]){ rotate([0,90,0]){ screwtrap(); } }
             translate([Rack_Width-p-5, gauge_box, gauge+dp-gauge_box]){ rotate([0,90,0]){ screwtrap(); } }
-        }
-    }
-
-    // Sedi viti / inserti sulle pareti laterali (avanti e dietro)
-    if(len(screw_side_front)>0){
-        for(i=[0:len(screw_side_front)-1]){
-            p = screw_side_front[i]*unit;
-            translate([20+gauge_box, p-5, gauge]){ rotate([0,-90,-90]){ screwtrap(); } }
-            translate([Rack_Width-20-gauge_box, p+5, gauge]){ rotate([0,-90,90]){ screwtrap(); } }
-            translate([20+gauge_box, p+5, gauge+dp-gauge_box]){ rotate([0,90,-90]){ screwtrap(); } }
-            translate([Rack_Width-20-gauge_box, p-5, gauge+dp-gauge_box]){ rotate([0,90,90]){ screwtrap(); } }
         }
     }
 }
