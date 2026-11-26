@@ -6,26 +6,28 @@
 
 $fn = 50;
 
-/* [Componente da Stampare] */
+/* [1. Generale & Componente] */
 // Seleziona il componente da stampare o visualizzare
 Part = "cabinet_assembly"; // [cabinet_assembly: Contenitore - Assieme Completo, frontplate: Contenitore - Piastra Frontale, cabinet: Contenitore - Corpo Scatola Box, lid: Contenitore - Coperchio Superiore, backplate: Contenitore - Piastra Posteriore, frame_tray: Telaio Aperto - Senza pareti e Fondo Alleggerito, board_preview: Simulazione 3D Scheda e Accessori, handles: Contenitore - Maniglie Frontali, light_guide: Supporto Fibra Ottica 1mm per LED RPi, oled_clip: Staffa Fissaggio Display OLED I2C, rack_end_open: Rack Frame - Piastra Aperta, rack_end_grid: Rack Frame - Piastra con Griglia, rack_end_chimney: Rack Frame - Piastra con Feritoie, rack_end_closed: Rack Frame - Piastra Chiusa, sidepanel: Rack Frame - Pannello Laterale Chiuso, sidepanel_handle: Rack Frame - Pannello con Maniglia, trap: Rack Frame - Nutless Trap M4, tophandle: Maniglia Superiore Rack (2pz), extrusion_plain: Profilato 2020 senza fori, extrusion_front: Profilato 2020 fori frontali, extrusion_all: Profilato 2020 fori completi]
 
-/* [Simulazione 3D della Scheda nel Contenitore] */
 // Mostra il modello 3D realistico della scheda e degli accessori all'interno del cabinet per verifica visiva
 Show_Board_Mockup = true;
 
-/* [Configurazione Profilato Estruso 2020] */
-// Modalità di calcolo della lunghezza del profilato
-Extrusion_Mode = "holes"; // [holes: Per numero di fori (Unità U), length: Per lunghezza personalizzata (mm)]
-// Numero di fori / Unità U (attivo se modalità = holes)
-Extrusion_Holes = 10; // [1:1:50]
-// Lunghezza personalizzata in mm (attiva se modalità = length)
-Extrusion_Custom_Length = 150; // [20:1:500]
+/* [2. Dimensioni Rack & Cabinet] */
+// Larghezza totale rack in mm (Fissata a 200 mm)
+Rack_Width = 200; 
+// Profondità struttura rack in mm (Default: 200 mm)
+Rack_Depth = 200; 
+// Profondità contenitore/cabinet in mm (Standard Raspberry Pi con SSD: 115mm o 98mm)
+Depth      = 115; // [80:1:200]
+// Adatta automaticamente la profondità del contenitore (senza superare 200mm totali) in base a scheda e accessori
+Auto_Depth = true;
+// Altezza in Unità Rack U (Standard per Raspberry Pi: 2U; 1U = ~44.45 mm)
+Units      = 2;   // [1:1:20] 
 
-/* [Configurazione Scheda / SBC] */
+/* [3. Scheda SBC] */
 // Seleziona il modello di scheda (configura automaticamente distanziali, porte retro, led e asole)
 Board_Type = "rpi4"; // [none: Nessuno (Cabinet Vuoto / Personalizzato), rpi3: Raspberry Pi 3B / 3B+, rpi4: Raspberry Pi 4B, rpi5: Raspberry Pi 5, rpizero: Raspberry Pi Zero / Zero 2 W (Mini), rpipico: Raspberry Pi Pico / Pico W, olimex_lime2: Olimex OLinuXino LIME2, bbb: BeagleBone Black (Standalone), bbb_cape: BeagleBone Black con Cape Espansione]
-
 // Posizionamento della scheda nel vano da 200mm (vano utile 160mm)
 Board_Position = "left"; // [left: A sinistra (scheda a sinistra e accessori a destra), right: A destra (scheda a destra e accessori a sinistra), center: Centrato nel cabinet]
 // Spostamento laterale fine della scheda/CPU in mm (aggiorna automaticamente fori e aperture sui pannelli)
@@ -33,41 +35,42 @@ Board_Offset_X = 0; // [-10:0.5:60]
 // Spostamento longitudinale (avanti/indietro) della scheda/CPU in mm (aggiorna automaticamente fori e asole laterali)
 Board_Offset_Z = 0; // [-40:0.5:40]
 
-/* [Accessori Interni & Frontali] */
+/* [4. Accessori Interni (SSD & Step-Down)] */
 // Includi fori e colonnine per montaggio disco SSD da 2.5 pollici
 Include_SSD = true;
+// Orientamento connettori disco SSD 2.5"
+SSD_Orientation = "front_sata"; // [front_sata: Connettore SATA verso il fronte (consigliato per LIME2), rear_sata: Connettore SATA verso il retro]
+// Spostamento laterale fine SSD 2.5" in mm
+SSD_Offset_X = 0; // [-30:0.5:30]
+// Spostamento longitudinale (avanti/indietro) SSD 2.5" in mm
+SSD_Offset_Z = 0; // [-30:0.5:40]
 
 // Includi colonnine per stabilizzatore switching DC-DC step-down (5V)
 Include_StepDown = true;
-
 // Modello di stabilizzatore switching
 StepDown_Type = "LM2596"; // [LM2596: Modulo LM2596 / LM2596S (fori 31.5x15mm), XL4015: Modulo XL4015 5A alta potenza (fori 47x18mm), Mini360: Modulo ultracompatto Mini360 / MP1584]
+// Zona di posizionamento regolatore DC-DC Step-Down
+StepDown_Side = "auto"; // [auto: Automatico (davanti all'SSD per LIME2, davanti alla scheda per altre), opposite: Sul lato opposto alla scheda, front_board: Davanti alla scheda]
+// Spostamento laterale fine regolatore Step-Down in mm
+StepDown_Offset_X = 0; // [-40:0.5:80]
+// Spostamento longitudinale (avanti/indietro) regolatore Step-Down in mm
+StepDown_Offset_Z = 0; // [-10:0.5:80]
 
-// Abilita finestra e colonnine M2 sul pannello frontale per display OLED I2C
+/* [5. Pannello Frontale - Display OLED / LCD] */
+// Abilita finestra e culla a incastro sul pannello frontale per display OLED/LCD
 Enable_OLED = false;
 // Modello di display (OLED I2C o LCD classico 16x2 / 20x4)
 OLED_Model = "oled_096_rect"; // [oled_096_rect: OLED 0.96 poll. 128x64 (23.5x13.5mm), oled_091_wide: OLED 0.91 poll. 128x32 (26x9mm), oled_130_rect: OLED 1.3 poll. 128x64 (31.5x17.5mm), oled_150_sq: OLED 1.5 poll. 128x128 (29x29mm - cons. 3U), lcd_1602: LCD 2x16 classico 1602 (72x25mm), lcd_2004: LCD 4x20 classico 2004 (97.5x40.5mm - cons. 2U)]
-// Posizione del display OLED sul pannello frontale
+// Posizione del display sul pannello frontale
 OLED_Position = "right"; // [right: A destra (sopra SSD), center: Al centro, left: A sinistra (lato scheda)]
-// Spostamento orizzontale fine del display OLED in mm
+// Spostamento orizzontale fine del display in mm
 OLED_Offset_X = 0; // [-40:0.5:40]
-// Spostamento verticale fine del display OLED in mm
+// Spostamento verticale fine del display in mm
 OLED_Offset_Y = 0; // [-10:0.5:15]
 
-// Abilita foro sul pannello posteriore per connettore alimentazione jack a barilotto DC
-Enable_Rear_DC_Jack = true;
-// Diametro foro jack DC a barilotto da pannello in mm
-Rear_DC_Jack_Dia = 8.0; // [8.0: DC-022 Standard (foro 8.0 mm), 11.2: DC-099 Metallico (foro 11.2 mm), 12.0: Pannello Grande (foro 12.0 mm)]
-// Posizione del jack DC sul pannello posteriore
-Rear_DC_Jack_Pos = "right"; // [right: A destra (lato accessori/SSD), center: Al centro, left: A sinistra (lato scheda)]
-// Spostamento orizzontale fine jack DC posteriore in mm
-Rear_DC_Jack_Offset_X = 0; // [-70:0.5:70]
-// Spostamento verticale fine jack DC posteriore in mm
-Rear_DC_Jack_Offset_Y = 0; // [-10:0.5:30]
-
+/* [6. Pannello Frontale - Comandi, Maniglie & MicroSD] */
 // Abilita le maniglie frontali e i relativi 4 fori svasati sul pannello frontale
 Enable_Front_Handles = true;
-
 // Abilita foro e pulsante di reset sul pannello frontale (a destra guardando dal fronte)
 Enable_Reset_Button = true;
 // Diametro foro pulsante reset da pannello in mm
@@ -78,8 +81,10 @@ Reset_Button_Pos = "right"; // [right: A destra (fronte dx), center: Al centro, 
 Reset_Button_Offset_X = 0; // [-60:0.5:60]
 // Spostamento verticale fine pulsante reset in mm
 Reset_Button_Offset_Y = 0; // [-15:0.5:30]
+// Abilita l'asola frontale per accesso MicroSD sul pannello frontale
+Enable_Front_SD_Slot = false;
 
-/* [Scritta Utente Frontale] */
+/* [7. Pannello Frontale - Scritta Utente] */
 // Abilita scritta personalizzata sul pannello frontale
 Enable_Custom_Label = false;
 // Testo della scritta utente
@@ -97,34 +102,13 @@ Custom_Label_Offset_X = 0; // [-70:0.5:70]
 // Spostamento verticale fine della scritta in mm
 Custom_Label_Offset_Y = 0; // [-20:0.5:40]
 
-// Abilita l'asola frontale per accesso MicroSD sul pannello frontale
-Enable_Front_SD_Slot = false;
-
-/* [Posizionamento Accessori Interni (mm)] */
-// Orientamento connettori disco SSD 2.5"
-SSD_Orientation = "front_sata"; // [front_sata: Connettore SATA verso il fronte (consigliato per LIME2), rear_sata: Connettore SATA verso il retro]
-// Spostamento laterale fine SSD 2.5" in mm
-SSD_Offset_X = 0; // [-30:0.5:30]
-// Spostamento longitudinale (avanti/indietro) SSD 2.5" in mm
-SSD_Offset_Z = 0; // [-30:0.5:40]
-
-// Zona di posizionamento regolatore DC-DC Step-Down
-StepDown_Side = "auto"; // [auto: Automatico (davanti all'SSD per LIME2, davanti alla scheda per altre), opposite: Sul lato opposto alla scheda, front_board: Davanti alla scheda]
-// Spostamento laterale fine regolatore Step-Down in mm
-StepDown_Offset_X = 0; // [-40:0.5:80]
-// Spostamento longitudinale (avanti/indietro) regolatore Step-Down in mm
-StepDown_Offset_Z = 0; // [-10:0.5:80]
-
-/* [Sistema LED Frontali (Fibra Ottica)] */
+/* [8. Pannello Frontale - LED & Fibra Ottica] */
 // Abilita fori e tubetti per portare la luce dei LED sul frontale con fibra ottica
 Enable_LED_Guide = true;
-
 // Diametro della fibra ottica in mm (consigliata fibra da 1.0 mm)
 Fiber_Diameter = 1.0; // [1.0: Fibra ottica 1.0 mm (Consigliata), 1.5: Fibra ottica 1.5 mm, 2.0: Fibra ottica 2.0 mm, 3.0: Filamento trasparente 3.0 mm]
-
 // Tipo di supporto per catturare la luce dei LED con fibra ottica
 LED_Guide_Style = "single_cap"; // [single_cap: Cappuccio Singolo (adesivo / colla a caldo - universale), single_screw: Braccetti Singoli a Vite su distanziale (senza colla - tutte le schede), dual_screw: Staffa Unica a Vite su distanziale (senza colla - 2 LED), pcb_clip: Clip a Scatto su Bordo PCB (senza colla - tutte le schede)]
-
 // Posizione dei LED sul pannello frontale (vista frontale)
 Front_LED_Pos = "board"; // [board: Sopra la scheda (predefinito), left: A sinistra (fronte sx), center: Al centro, right: A destra (fronte dx)]
 // Spostamento orizzontale fine dei LED frontali in mm
@@ -132,40 +116,42 @@ Front_LED_Offset_X = 0; // [-80:0.5:80]
 // Spostamento verticale fine dei LED frontali in mm
 Front_LED_Offset_Y = 0; // [-8:0.5:30]
 
-/* [Dimensioni Principali (mm)] */
-// Larghezza totale rack in mm (Fissata a 200 mm)
-Rack_Width = 200; 
-// Profondità struttura rack in mm (Default: 200 mm)
-Rack_Depth = 200; 
-// Profondità contenitore/cabinet in mm (Standard Raspberry Pi con SSD: 115mm o 98mm)
-Depth      = 115; // [80:1:200]
-// Adatta automaticamente la profondità del contenitore (senza superare 200mm totali) in base a scheda e accessori
-Auto_Depth = true;
-// Altezza in Unità Rack U (Standard per Raspberry Pi: 2U; 1U = ~14.05 mm)
-Units      = 2;   // [1:1:20] 
+/* [9. Pannello Posteriore - Alimentazione DC] */
+// Abilita foro sul pannello posteriore per connettore alimentazione jack a barilotto DC
+Enable_Rear_DC_Jack = true;
+// Diametro foro jack DC a barilotto da pannello in mm
+Rear_DC_Jack_Dia = 8.0; // [8.0: DC-022 Standard (foro 8.0 mm), 11.2: DC-099 Metallico (foro 11.2 mm), 12.0: Pannello Grande (foro 12.0 mm)]
+// Posizione del jack DC sul pannello posteriore
+Rear_DC_Jack_Pos = "right"; // [right: A destra (lato accessori/SSD), center: Al centro, left: A sinistra (lato scheda)]
+// Spostamento orizzontale fine jack DC posteriore in mm
+Rear_DC_Jack_Offset_X = 0; // [-70:0.5:70]
+// Spostamento verticale fine jack DC posteriore in mm
+Rear_DC_Jack_Offset_Y = 0; // [-10:0.5:30]
 
-/* [Dettagli Meccanici e Tolleranze] */
-// Posizione viti orizzontali del cabinet (mm dal bordo laterale del rack)
-screw_pos = 28; 
+/* [10. Profilato Estruso 2020] */
+// Modalità di calcolo della lunghezza del profilato
+Extrusion_Mode = "holes"; // [holes: Per numero di fori (Unità U), length: Per lunghezza personalizzata (mm)]
+// Numero di fori / Unità U (attivo se modalità = holes)
+Extrusion_Holes = 10; // [1:1:50]
+// Lunghezza personalizzata in mm (attiva se modalità = length)
+Extrusion_Custom_Length = 150; // [20:1:500]
 
-// Tolleranza gioco accoppiamenti (mm)
-slip = 0.35;
-
-// Spessori piastre e pareti (mm)
-gauge     = 3; // Spessore piastre strutturali (3 mm)
-gauge_box = 2; // Spessore pareti scatola e coperchio (2 mm)
-
-/* [Chiusura Cabinet & Inserti Filettati] */
+/* [11. Chiusura Cabinet & Inserti Filettati] */
 // Sistema di fissaggio per chiusura cabinet (frontale, coperchio, retro)
 Cabinet_Fasteners = "insert_m4"; // [insert_m4: Inserti in ottone M4 a caldo (Heat-Set) + Viti M4, standard_m3: Viti M3 standard (originale KronBjorn), insert_m3: Inserti in ottone M3 a caldo (Heat-Set) + Viti M3]
-
 // Diametro foro per inserimento a caldo inserto M4 in mm (Consigliato 5.6 mm per M4)
 Insert_M4_Hole_Dia = 5.6; // [5.0:0.1:6.5]
-
 // Profondità sede per inserto M4 in mm
 Insert_M4_Depth = 6.0; // [4.0:0.5:10.0]
 
-/* [Dimensioni Viti e Fori (mm)] */
+/* [12. Meccanica, Tolleranze & Viti] */
+// Posizione viti orizzontali del cabinet (mm dal bordo laterale del rack)
+screw_pos = 28; 
+// Tolleranza gioco accoppiamenti (mm)
+slip = 0.35;
+// Spessori piastre e pareti (mm)
+gauge     = 3; // Spessore piastre strutturali (3 mm)
+gauge_box = 2; // Spessore pareti scatola e coperchio (2 mm)
 screw_head        = (Cabinet_Fasteners == "insert_m4") ? 8.6 : 7.4; 
 screw_head_height = (Cabinet_Fasteners == "insert_m4") ? 2.6 : 2.2;  
 screw_dia         = (Cabinet_Fasteners == "insert_m4") ? 4.3 : (Cabinet_Fasteners == "insert_m3") ? 3.3 : 3.0;   
@@ -515,8 +501,9 @@ module go(){
     }else if(Part=="trap" || Part=="m" || Part=="Trap"){
         trap(Units);
     }else if(Part=="frame_tray" || Part=="FrameTray"){
-        // Telaio / Slitta aperta senza pareti avanti e dietro, con fondo alleggerito
-        frame_tray(eff_depth, Units, width);
+        // Telaio / Slitta aperta forzata alla profondità del telaio rack (Rack_Depth - 2*gauge) con viti avanti e dietro
+        frame_dp = Rack_Depth - 2 * gauge;
+        frame_tray(frame_dp, Units, width, [screw_pos], screw_side_list);
     // --- ESTRUSIONI E MANIGLIA SUPERIORE ---
     }else if(Part=="tophandle" || Part=="n" || Part=="TopHandle"){
         tophandle();
@@ -1721,8 +1708,8 @@ module wedge(){
     }
 }
 
-// Telaio aperto (frame tray) senza pareti anteriore e posteriore, con fondo alleggerito
-module frame_tray(dp=Depth, u=Units, w=width){
+// Telaio aperto (frame tray) forzato alla profondita del telaio rack, con viti sia avanti che indietro
+module frame_tray(dp=Rack_Depth - 2*gauge, u=Units, w=width, screw_bottom_front=[screw_pos], screw_side_front=[0.5]){
     h = u * unit;
     
     difference(){
@@ -1751,7 +1738,6 @@ module frame_tray(dp=Depth, u=Units, w=width){
         }
         
         // Fondo a griglia quadrata (per il passaggio di fascette da 2.5mm/3.6mm/4.8mm e viti M3/M4 con rondelle)
-        // Caselle quadrate da 9x9mm con nervature ortogonali da 3mm e raccordi interni da 1mm
         hole_size = 9;
         rib_size  = 3;
         pitch     = hole_size + rib_size; // 12 mm
@@ -1777,15 +1763,28 @@ module frame_tray(dp=Depth, u=Units, w=width){
                 }
             }
         }
-        
-        // Asolature posteriori per compatibilita con le linguette di aggancio del rack
-        translate([20, unit/2+3, dp+gauge-5]){ cylinder(d=gauge_box, h=10); }
-        translate([20, unit/2+0, dp+gauge-5]){ cylinder(d=gauge_box, h=10); }
-        translate([20, unit/2-3, dp+gauge-5]){ cylinder(d=gauge_box, h=10); }
-    
-        translate([20+w, unit/2+3, dp+gauge-5]){ cylinder(d=gauge_box, h=10); }
-        translate([20+w, unit/2+0, dp+gauge-5]){ cylinder(d=gauge_box, h=10); }
-        translate([20+w, unit/2-3, dp+gauge-5]){ cylinder(d=gauge_box, h=10); }
+    }
+
+    // Sedi viti / inserti sul fondo (avanti e dietro)
+    if(len(screw_bottom_front)>0){
+        for(i=[0:len(screw_bottom_front)-1]){
+            p = screw_bottom_front[i];
+            translate([p+5, gauge_box, gauge]){ rotate([0,-90,0]){ screwtrap(); } }
+            translate([Rack_Width-p+5, gauge_box, gauge]){ rotate([0,-90,0]){ screwtrap(); } }
+            translate([p-5, gauge_box, gauge+dp-gauge_box]){ rotate([0,90,0]){ screwtrap(); } }
+            translate([Rack_Width-p-5, gauge_box, gauge+dp-gauge_box]){ rotate([0,90,0]){ screwtrap(); } }
+        }
+    }
+
+    // Sedi viti / inserti sulle pareti laterali (avanti e dietro)
+    if(len(screw_side_front)>0){
+        for(i=[0:len(screw_side_front)-1]){
+            p = screw_side_front[i]*unit;
+            translate([20+gauge_box, p-5, gauge]){ rotate([0,-90,-90]){ screwtrap(); } }
+            translate([Rack_Width-20-gauge_box, p+5, gauge]){ rotate([0,-90,90]){ screwtrap(); } }
+            translate([20+gauge_box, p+5, gauge+dp-gauge_box]){ rotate([0,90,-90]){ screwtrap(); } }
+            translate([Rack_Width-20-gauge_box, p-5, gauge+dp-gauge_box]){ rotate([0,90,90]){ screwtrap(); } }
+        }
     }
 }
 
