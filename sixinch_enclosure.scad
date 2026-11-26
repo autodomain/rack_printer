@@ -116,7 +116,37 @@ Front_LED_Offset_X = 0; // [-80:0.5:80]
 // Spostamento verticale fine dei LED frontali in mm
 Front_LED_Offset_Y = 0; // [-8:0.5:30]
 
-/* [9. Pannello Posteriore - Alimentazione DC] */
+/* [9. Raffreddamento - Ventole Retro & Feritoie Frontali] */
+// Abilita ventola/e di raffreddamento sul pannello posteriore
+Enable_Rear_Fan = false;
+// Dimensione ventola assiale standard in mm (20mm ideale per 2U; 30/40mm per 3U; 50/60mm per 4U/5U)
+Rear_Fan_Size = 20; // [20: 20x20 mm (fori 16mm - Ideale 2U), 25: 25x25 mm (fori 20mm - 2U/3U), 30: 30x30 mm (fori 24mm - 3U+), 40: 40x40 mm (fori 32mm - 3U+), 50: 50x50 mm (fori 40mm - 4U+), 60: 60x60 mm (fori 50mm - 5U+)]
+// Numero di ventole sul pannello posteriore
+Rear_Fan_Count = 1; // [1: 1 Ventola, 2: 2 Ventole]
+// Interasse orizzontale tra le 2 ventole in mm (attivo se 2 ventole)
+Rear_Fan_Spacing = 28; // [22:1:90]
+// Posizione principale ventola/e sul pannello posteriore
+Rear_Fan_Pos = "right"; // [right: A destra (zona libera tra scheda e jack DC), center: Al centro, left: A sinistra]
+// Spostamento orizzontale fine ventola/e posteriori in mm
+Rear_Fan_Offset_X = 0; // [-60:0.5:60]
+// Spostamento verticale fine ventola/e posteriori in mm
+Rear_Fan_Offset_Y = 0; // [-25:0.5:25]
+// Stile apertura aria sulla piastra posteriore
+Rear_Fan_Grill = "bars"; // [bars: Griglia a feritoie integrate, open: Foro tondo aperto]
+// Feritoie di aspirazione sul pannello frontale abbinate alle ventole
+Front_Vent_Mode = "auto"; // [auto: Automatico (attivo con ventole retro), on: Sempre attivo, off: Disattivo]
+// Posizione delle feritoie sul pannello frontale (vista frontale)
+Front_Vent_Pos = "left"; // [left: A sinistra (fronte sx), center: Al centro, right: A destra (fronte dx)]
+// Larghezza area feritoie frontali in mm
+Front_Vent_Width = 36; // [16:2:120]
+// Altezza area feritoie frontali in mm
+Front_Vent_Height = 32; // [12:2:65]
+// Spostamento orizzontale fine feritoie frontali in mm
+Front_Vent_Offset_X = 0; // [-70:0.5:70]
+// Spostamento verticale fine feritoie frontali in mm
+Front_Vent_Offset_Y = 0; // [-25:0.5:25]
+
+/* [10. Pannello Posteriore - Alimentazione DC] */
 // Abilita foro sul pannello posteriore per connettore alimentazione jack a barilotto DC
 Enable_Rear_DC_Jack = true;
 // Diametro foro jack DC a barilotto da pannello in mm
@@ -128,7 +158,7 @@ Rear_DC_Jack_Offset_X = 0; // [-70:0.5:70]
 // Spostamento verticale fine jack DC posteriore in mm
 Rear_DC_Jack_Offset_Y = 0; // [-10:0.5:30]
 
-/* [10. Profilato Estruso 2020] */
+/* [11. Profilato Estruso 2020] */
 // Modalità di calcolo della lunghezza del profilato
 Extrusion_Mode = "holes"; // [holes: Per numero di fori (Unità U), length: Per lunghezza personalizzata (mm)]
 // Numero di fori / Unità U (attivo se modalità = holes)
@@ -136,7 +166,7 @@ Extrusion_Holes = 10; // [1:1:50]
 // Lunghezza personalizzata in mm (attiva se modalità = length)
 Extrusion_Custom_Length = 150; // [20:1:500]
 
-/* [11. Chiusura Cabinet & Inserti Filettati] */
+/* [12. Chiusura Cabinet & Inserti Filettati] */
 // Sistema di fissaggio per chiusura cabinet (frontale, coperchio, retro)
 Cabinet_Fasteners = "insert_m4"; // [insert_m4: Inserti in ottone M4 a caldo (Heat-Set) + Viti M4, standard_m3: Viti M3 standard (originale KronBjorn), insert_m3: Inserti in ottone M3 a caldo (Heat-Set) + Viti M3]
 // Diametro foro per inserimento a caldo inserto M4 in mm (Consigliato 5.6 mm per M4)
@@ -144,7 +174,7 @@ Insert_M4_Hole_Dia = 5.6; // [5.0:0.1:6.5]
 // Profondità sede per inserto M4 in mm
 Insert_M4_Depth = 6.0; // [4.0:0.5:10.0]
 
-/* [12. Meccanica, Tolleranze & Viti] */
+/* [13. Meccanica, Tolleranze & Viti] */
 // Posizione viti orizzontali del cabinet (mm dal bordo laterale del rack)
 screw_pos = 28; 
 // Tolleranza gioco accoppiamenti (mm)
@@ -430,6 +460,9 @@ module go(){
                 if(Enable_Rear_DC_Jack){
                     dc_jack_3d_mockup(20 + gauge_box + dc_jack_x, gauge_box + dc_jack_y, eff_depth, Rear_DC_Jack_Dia);
                 }
+                if(Enable_Rear_Fan){
+                    fan_3d_mockup(u=Units, dp=eff_depth);
+                }
                 if(Enable_Reset_Button){
                     reset_button_3d_mockup(rst_btn_x, rst_btn_y, Reset_Button_Dia);
                 }
@@ -590,6 +623,31 @@ module frontplate(u, square_hole, round_hole, round_peg, screw_side_front, screw
                 linear_extrude(height=Custom_Label_Depth + 0.01){
                     mirror([1,0,0]){
                         text(Custom_Label_Text, size=Custom_Label_Size, halign="center", valign="center", font="Liberation Sans:style=Bold");
+                    }
+                }
+            }
+        }
+
+        // Feritoie di aspirazione / ventilazione frontali (abbinate alle ventole posteriori)
+        if((Front_Vent_Mode == "on") || (Front_Vent_Mode == "auto" && Enable_Rear_Fan)){
+            fv_cx = ((Front_Vent_Pos == "right") ? 48.0 :
+                     (Front_Vent_Pos == "left")  ? (Rack_Width - 48.0) :
+                     (Rack_Width / 2)) + Front_Vent_Offset_X;
+            fv_cy = (u * unit) / 2 + Front_Vent_Offset_Y;
+            fv_slot_w = 3.2;
+            fv_pitch  = 7.2;
+            fv_count  = max(1, floor((Front_Vent_Width - fv_slot_w) / fv_pitch) + 1);
+            fv_span   = (fv_count - 1) * fv_pitch;
+            eff_fv_h  = min(Front_Vent_Height, max(8.0, u * unit - 8.0));
+            fv_len    = max(4.0, eff_fv_h - fv_slot_w);
+            for(i = [0 : fv_count - 1]){
+                sx = fv_cx - fv_span / 2 + i * fv_pitch;
+                translate([sx, fv_cy, -1]){
+                    linear_extrude(gauge + 2){
+                        hull(){
+                            translate([0, -fv_len/2]){ circle(d=fv_slot_w, $fn=20); }
+                            translate([0,  fv_len/2]){ circle(d=fv_slot_w, $fn=20); }
+                        }
                     }
                 }
             }
@@ -1345,6 +1403,52 @@ module back_plate(u,dp,screw_top,screw_bottom,screw_side,square_hole,round_hole)
                 y   = round_hole[i][1];
                 dia = round_hole[i][2];
                 translate([20+gauge_box+x, gauge_box+y, dp-4]){ cylinder(d=dia, h=10); }
+            }
+        }
+
+        // Ventole di raffreddamento posteriori (20 / 25 / 30 / 40 / 50 / 60 mm, 1 o 2 ventole)
+        if(Enable_Rear_Fan){
+            fan_base_x = ((Rear_Fan_Pos == "left")  ? (20 + gauge_box + 32) :
+                          (Rear_Fan_Pos == "right") ? (Rack_Width - 20 - gauge_box - 54) :
+                          (Rack_Width / 2)) + Rear_Fan_Offset_X;
+            fan_cy     = (u * unit) / 2 + Rear_Fan_Offset_Y;
+            fan_hole_d = Rear_Fan_Size - ((Rear_Fan_Size <= 25) ? 2.5 : 3.0);
+            fan_pitch  = (Rear_Fan_Size == 20) ? 16 :
+                         (Rear_Fan_Size == 25) ? 20 :
+                         (Rear_Fan_Size == 30) ? 24 :
+                         (Rear_Fan_Size == 40) ? 32 :
+                         (Rear_Fan_Size == 50) ? 40 : 50;
+            fan_scr_d  = (Rear_Fan_Size >= 50) ? 4.3 : (Rear_Fan_Size <= 25) ? 2.7 : 3.3;
+            fan_offsets = (Rear_Fan_Count == 2) ? [-Rear_Fan_Spacing/2, Rear_Fan_Spacing/2] : [0];
+
+            for(dx = fan_offsets){
+                fx = fan_base_x + dx;
+                // 4 fori di fissaggio angolari
+                for(sx = [-1, 1], sy = [-1, 1]){
+                    translate([fx + sx * fan_pitch/2, fan_cy + sy * fan_pitch/2, gauge + dp - gauge_box - 1]){
+                        cylinder(d=fan_scr_d, h=gauge_box + 2, $fn=20);
+                    }
+                }
+                // Apertura centrale aria (libera o con griglia a feritoie integrate)
+                translate([fx, fan_cy, gauge + dp - gauge_box - 1]){
+                    if(Rear_Fan_Grill == "open"){
+                        cylinder(d=fan_hole_d, h=gauge_box + 2, $fn=48);
+                    } else {
+                        intersection(){
+                            cylinder(d=fan_hole_d, h=gauge_box + 2, $fn=48);
+                            union(){
+                                bar_pitch = 6.8;
+                                bar_slot_h = 3.6;
+                                n_bars = floor(fan_hole_d / bar_pitch) + 1;
+                                for(b = [-n_bars : n_bars]){
+                                    translate([-fan_hole_d/2 - 1, b * bar_pitch - bar_slot_h/2, -0.5]){
+                                        cube([fan_hole_d + 2, bar_slot_h, gauge_box + 3]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         
@@ -2351,6 +2455,34 @@ module oled_3d_mockup(cx, cy, model="oled_096_rect"){
                 translate([pcb_w/2 - 3.0, -5.0, 1.6]){ cube([2.5, 10.0, 6.0]); }
             } else {
                 translate([-5.0, pcb_h/2 - 3.0, 1.6]){ cube([10.0, 2.5, 6.0]); }
+            }
+        }
+    }
+}
+
+// Simulazione 3D delle ventole assiali montate all'interno della piastra posteriore
+module fan_3d_mockup(u=Units, dp=Depth){
+    fan_base_x = ((Rear_Fan_Pos == "left")  ? (20 + gauge_box + 32) :
+                  (Rear_Fan_Pos == "right") ? (Rack_Width - 20 - gauge_box - 54) :
+                  (Rack_Width / 2)) + Rear_Fan_Offset_X;
+    fan_cy     = (u * unit) / 2 + Rear_Fan_Offset_Y;
+    fan_t      = (Rear_Fan_Size >= 50) ? 15.0 : 10.0;
+    fan_z      = gauge + dp - gauge_box - fan_t;
+    fan_offsets = (Rear_Fan_Count == 2) ? [-Rear_Fan_Spacing/2, Rear_Fan_Spacing/2] : [0];
+    for(dx = fan_offsets){
+        translate([fan_base_x + dx, fan_cy, fan_z]){
+            color([0.14, 0.14, 0.16]){
+                difference(){
+                    translate([-Rear_Fan_Size/2, -Rear_Fan_Size/2, 0]){
+                        cube([Rear_Fan_Size, Rear_Fan_Size, fan_t]);
+                    }
+                    translate([0, 0, -0.5]){
+                        cylinder(d=Rear_Fan_Size - 3.5, h=fan_t + 1, $fn=36);
+                    }
+                }
+            }
+            color([0.22, 0.22, 0.25]){
+                cylinder(d=Rear_Fan_Size * 0.35, h=fan_t, $fn=24);
             }
         }
     }
